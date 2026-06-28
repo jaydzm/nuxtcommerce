@@ -7,7 +7,13 @@
   </div>
 </template>
 
-<script setup>
+
+
+
+<script setup lang="ts"> 
+
+
+
 const config = useRuntimeConfig()
 
 // 顺便发起一个最简单的测试查询
@@ -18,10 +24,10 @@ const { error, pending } = await useAsyncQuery(gql`
     }
   }
 `).catch(err => ({ error: err }))
-</script>
 
 
-<script setup lang="ts"> 
+
+  
 const { site } = useAppConfig();
 const { name, description } = site;
 
