@@ -1,15 +1,3 @@
-<template>
-  <div style="padding: 20px; background: #fff3cd; color: #856404; border: 1px solid #ffeeba; margin: 20px; font-family: monospace; z-index: 9999; position: relative;">
-    <h3>🔌 调试看板</h3>
-    <p><strong>Vercel 传给前端的后端地址是：</strong> <span style="color: red;">{{ config.public.graphqlTarget || ' 或者是空的/没读到' }}</span></p >
-    <p><strong>Apollo 客户端状态：</strong> {{ pending ? '正在尝试连接...' : '连接尝试结束' }}</p >
-    <p v-if="error" style="color: red;"><strong>报错信息：</strong> {{ error.message }}</p >
-  </div>
-</template>
-
-
-
-
 <script setup lang="ts">  
 const { site } = useAppConfig();
 const { name, description } = site;
