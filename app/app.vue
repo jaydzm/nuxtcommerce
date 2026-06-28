@@ -1,3 +1,7 @@
+<script setup>
+const config = useRuntimeConfig()
+console.log('https://www.toppuer.top/graphql', config.public.graphqlTarget) // 看看这里输出的是不是你填的那个网址
+</script>
 <!--app/app.vue-->
 <script setup lang="ts">
 const { site } = useAppConfig();
