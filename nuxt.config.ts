@@ -44,7 +44,14 @@ export default defineNuxtConfig({
     "/favorites": { swr: 600 },
   },
 
- 
+
+ nitro: {
+    preset: "vercel",  // 或 "vercel-edge"
+    prerender: { 
+      routes: ["/sitemap.xml", "/robots.txt"] 
+    },
+
+  
 
   compatibilityDate: "2025-01-01",
 });
