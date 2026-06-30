@@ -7,7 +7,7 @@ export default defineNuxtConfig({
   modules: ["@vueuse/nuxt", "@nuxt/ui", "@nuxt/image", "notivue/nuxt", "@nuxtjs/i18n", "@nuxthub/core"],
 
   i18n: {
-    defaultLocale: "en",
+    defaultLocale: "cn",
     strategy: "prefix_except_default",
     langDir: "locales",
     detectBrowserLanguage: {
