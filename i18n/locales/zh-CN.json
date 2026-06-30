@@ -42,12 +42,12 @@
   "checkout": {
     "title": "Kasse",
     "form": {
-      "first_name": "Vorname",
-      "last_name": "Nachname",
-      "email": "E-Mail",
-      "phone": "Telefon",
-      "city": "Stadt",
-      "address": "Adresse"
+      "first_name": "姓",
+      "last_name": "名",
+      "email": "邮箱",
+      "phone": "电话",
+      "city": "城市",
+      "address": "地址"
     },
     "pay": {
       "description": "Gesamtzahlung von {total} für {items} Artikel",
