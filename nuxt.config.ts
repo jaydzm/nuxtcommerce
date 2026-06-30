@@ -45,11 +45,7 @@ export default defineNuxtConfig({
   },
 
 
-   nitro: {
-      preset: "vercel",  
-      prerender: { routes: ["/sitemap.xml", "/robots.txt"] 
-  },
-
+  
   
 
   compatibilityDate: "2025-01-01",
