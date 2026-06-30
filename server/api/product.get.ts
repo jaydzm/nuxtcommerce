@@ -8,7 +8,7 @@ export default cachedEventHandler(
     return await requestQuery(getProductQuery, { slug, sku });
   },
   {
-    maxAge: 60 * 5,
+    maxAge: 10,
     swr: true,
     getKey: event => event.req.url!,
   }
