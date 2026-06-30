@@ -45,7 +45,10 @@ export default defineNuxtConfig({
     "/favorites": { swr: 600 },
   },
 
-
+  nitro: {
+    preset: "cloudflare_pages",
+    prerender: { routes: ["/sitemap.xml", "/robots.txt"] },
+  },
   
   
 
