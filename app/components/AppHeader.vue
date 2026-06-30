@@ -65,7 +65,7 @@ const totalQuantity = computed(() => cart.value.reduce((s, i) => s + (i.quantity
         <img class="rounded-lg max-lg:rounded-full bg-[#b31015] w-8 h-8" src="/logo.svg" alt="Logo" loading="lazy" title="logo" />
       </NuxtLink>
       <NuxtLink
-        aria-label="分类"
+        aria-label="category"
         exactActiveClass="bg-black dark:bg-white text-white dark:text-black"
         class="font-semibold cursor-pointer px-4 rounded-full hover:bg-black hover:dark:bg-white h-12 items-center justify-center hover:text-white hover:dark:text-black transition active:scale-95 lg:flex hidden"
         :to="localePath('/categories')">
