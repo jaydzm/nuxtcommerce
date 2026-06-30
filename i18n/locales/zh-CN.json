@@ -1,6 +1,6 @@
 {
   "general": {
-    "go_back": "Zurück",
+    "go_back": "返回",
     "loading": "Laden..."
   },
   "theme": {
@@ -20,7 +20,7 @@
     "change_language": "改变语言"
   },
   "search": {
-    "placeholder": "Suchen...",
+    "placeholder": "搜索...",
     "placeholder_in_category": "In {category} suchen...",
     "no_results_for_query": "Keine Ergebnisse für {query}",
     "no_results_suggestion": "Verbessern Sie Ihre Ergebnisse, indem Sie die Rechtschreibung überprüfen oder ein allgemeineres Stichwort verwenden.",
@@ -34,7 +34,7 @@
     "reset_search": "Suche zurücksetzen"
   },
   "filter": {
-    "all_categories": "Alle Kategorien",
+    "all_categories": "全部",
     "newest": "Neueste",
     "price_low_high": "Preis: Niedrig bis Hoch",
     "price_high_low": "Preis: Hoch bis Niedrig"
@@ -79,7 +79,7 @@
     "added_to_cart": "Zum Warenkorb hinzugefügt"
   },
   "favorites": {
-    "nothing_to_show_yet": "Noch nichts zu sehen... noch nicht!",
+    "nothing_to_show_yet": "没什么!",
     "wishlist_lives_here": "Wunschlisten, die Sie erstellen, werden hier angezeigt. Das sind einige Ihrer Lieblingssachen..."
   }
 }
