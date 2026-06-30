@@ -75,11 +75,11 @@
   "cart": {
     "empty": "Ihr Warenkorb ist leer",
     "notting_added": "Sie haben noch keine Artikel in Ihren Warenkorb gelegt.",
-    "add_to_cart": "加入购物车",
-    "added_to_cart": "Zum Warenkorb hinzugefügt"
+    "add_to_cart": "免费领取茶样",
+    "added_to_cart": "已添加茶"
   },
   "favorites": {
     "nothing_to_show_yet": "没什么!",
-    "wishlist_lives_here": "Wunschlisten, die Sie erstellen, werden hier angezeigt. Das sind einige Ihrer Lieblingssachen..."
+    "wishlist_lives_here": "点喜欢的小星星..."
   }
 }
