@@ -1,7 +1,7 @@
 {
   "general": {
     "go_back": "返回",
-    "loading": "Laden..."
+    "loading": "加载..."
   },
   "theme": {
     "dark": "Dunkel",
@@ -75,7 +75,7 @@
   "cart": {
     "empty": "Ihr Warenkorb ist leer",
     "notting_added": "Sie haben noch keine Artikel in Ihren Warenkorb gelegt.",
-    "add_to_cart": "In den Warenkorb",
+    "add_to_cart": "加入购物车",
     "added_to_cart": "Zum Warenkorb hinzugefügt"
   },
   "favorites": {
