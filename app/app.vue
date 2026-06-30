@@ -18,6 +18,7 @@ useSeoMeta({
   twitterCreator: '@zhatlen',
   twitterImage: 'https://commerce.nuxt.dev/social-card.jpg',
   keywords: `${name}, ecommerce, nuxt, woocommerce`,
+  charset: 'utf-8',
   viewport: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover',
 });
 </script>
