@@ -45,11 +45,10 @@ export default defineNuxtConfig({
   },
 
 
- nitro: {
-    preset: "vercel",  // 或 "vercel-edge"
-    prerender: { 
-      routes: ["/sitemap.xml", "/robots.txt"] 
-    },
+   nitro: {
+      preset: "vercel",  
+      prerender: { routes: ["/sitemap.xml", "/robots.txt"] 
+  },
 
   
 
