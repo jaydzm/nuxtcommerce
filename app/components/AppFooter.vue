@@ -27,53 +27,6 @@ const chooseLocale = code => {
 
 
 
-  
-  <div class="slider-container ml-2 lg:ml-4 gap-2 lg:gap-4" v-if="!categories.length">
-    <div class="h-[50px] min-w-36 bg-neutral-200 dark:bg-neutral-800 rounded-full skeleton"></div>
-    <div class="h-[50px] relative min-w-36 bg-neutral-200 dark:bg-neutral-800 rounded-full skeleton items-center flex">
-      <div class="w-[38px] h-[38px] absolute rounded-full bg-neutral-300/50 dark:bg-neutral-900/40 left-2"></div>
-    </div>
-    <div class="h-[50px] relative min-w-32 bg-neutral-200 dark:bg-neutral-800 rounded-full skeleton items-center flex">
-      <div class="w-[38px] h-[38px] absolute rounded-full bg-neutral-300/50 dark:bg-neutral-900/40 left-2"></div>
-    </div>
-    <div class="h-[50px] relative min-w-48 bg-neutral-200 dark:bg-neutral-800 rounded-full skeleton items-center flex">
-      <div class="w-[38px] h-[38px] absolute rounded-full bg-neutral-300/50 dark:bg-neutral-900/40 left-2"></div>
-    </div>
-    <div class="h-[50px] relative min-w-32 bg-neutral-200 dark:bg-neutral-800 rounded-full skeleton items-center flex">
-      <div class="w-[38px] h-[38px] absolute rounded-full bg-neutral-300/50 dark:bg-neutral-900/40 left-2"></div>
-    </div>
-    <div class="h-[50px] relative min-w-60 bg-neutral-200 dark:bg-neutral-800 rounded-full skeleton items-center flex">
-      <div class="w-[38px] h-[38px] absolute rounded-full bg-neutral-300/50 dark:bg-neutral-900/40 left-2"></div>
-    </div>
-    <div class="h-[50px] relative min-w-32 bg-neutral-200 dark:bg-neutral-800 rounded-full skeleton items-center flex">
-      <div class="w-[38px] h-[38px] absolute rounded-full bg-neutral-300/50 dark:bg-neutral-900/40 left-2"></div>
-    </div>
-    <div class="h-[50px] relative min-w-36 bg-neutral-200 dark:bg-neutral-800 rounded-full skeleton items-center flex">
-      <div class="w-[38px] h-[38px] absolute rounded-full bg-neutral-300/50 dark:bg-neutral-900/40 left-2"></div>
-    </div>
-    <div class="h-[50px] relative min-w-32 bg-neutral-200 dark:bg-neutral-800 rounded-full skeleton items-center flex">
-      <div class="w-[38px] h-[38px] absolute rounded-full bg-neutral-300/50 dark:bg-neutral-900/40 left-2"></div>
-    </div>
-    <div class="h-[50px] relative min-w-32 bg-neutral-200 dark:bg-neutral-800 rounded-full skeleton items-center flex">
-      <div class="w-[38px] h-[38px] absolute rounded-full bg-neutral-300/50 dark:bg-neutral-900/40 left-2"></div>
-    </div>
-    <div class="h-[50px] relative min-w-28 bg-neutral-200 dark:bg-neutral-800 rounded-full skeleton items-center flex">
-      <div class="w-[38px] h-[38px] absolute rounded-full bg-neutral-300/50 dark:bg-neutral-900/40 left-2"></div>
-    </div>
-    <div class="h-[50px] relative min-w-32 bg-neutral-200 dark:bg-neutral-800 rounded-full skeleton items-center flex">
-      <div class="w-[38px] h-[38px] absolute rounded-full bg-neutral-300/50 dark:bg-neutral-900/40 left-2"></div>
-    </div>
-    <div class="h-[50px] relative min-w-40 bg-neutral-200 dark:bg-neutral-800 rounded-full skeleton items-center flex">
-      <div class="w-[38px] h-[38px] absolute rounded-full bg-neutral-300/50 dark:bg-neutral-900/40 left-2"></div>
-    </div>
-    <div class="h-[50px] relative min-w-32 bg-neutral-200 dark:bg-neutral-800 rounded-full skeleton items-center flex">
-      <div class="w-[38px] h-[38px] absolute rounded-full bg-neutral-300/50 dark:bg-neutral-900/40 left-2"></div>
-    </div>
-    <div class="h-[50px] relative min-w-44 bg-neutral-200 dark:bg-neutral-800 rounded-full skeleton items-center flex">
-      <div class="w-[38px] h-[38px] absolute rounded-full bg-neutral-300/50 dark:bg-neutral-900/40 left-2"></div>
-    </div>
-  </div>
-  <CarouselCategories v-else :categories="categories" />
 
 
 
@@ -84,8 +37,8 @@ const chooseLocale = code => {
   
   <footer class="my-5 flex items-center justify-between gap-3 px-5 text-[13px] font-semibold text-secondary-text dark:text-secondary-text-d">
     <div class="truncate">
-      <a class="transition-all hover:text-black hover:dark:text-neutral-100" href="https://www.toptea.top" target="_blank">
-        支持
+      <a class="transition-all hover:text-black hover:dark:text-neutral-100" href="/" target="_blank">
+        纯天然食材获取
       </a>
     </div>
 
