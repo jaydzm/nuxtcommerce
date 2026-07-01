@@ -25,16 +25,14 @@ const cartTotal = computed(() => {
       <div class="grid grid-cols-2 gap-3 billing w-full">
         
 
-       <div class="col-span-full">
-          <input required v-model="userDetails.email" :placeholder="$t('checkout.form.email')" name="email" type="email" class="" />
-        </div>
+      
         <div class="col-span-1">
           <input required v-model="userDetails.firstName" :placeholder="$t('checkout.form.first_name')" name="first-name" type="text" />
         </div>
         <div class="col-span-1">
           <input required v-model="userDetails.lastName" :placeholder="$t('checkout.form.last_name')" name="last-name" type="text" />
         </div>
-        <div class="col-span-1">
+        <div class="col-span-full">
           <input required v-model="userDetails.phone" :placeholder="$t('checkout.form.phone')" name="phone" type="text" />
         </div>
         <div class="col-span-1">
