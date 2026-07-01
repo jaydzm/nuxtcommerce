@@ -26,12 +26,9 @@ const chooseLocale = code => {
 <template>
   <footer class="my-5 flex items-center justify-between gap-3 px-5 text-[13px] font-semibold text-secondary-text dark:text-secondary-text-d">
     <div class="truncate">
-      <a class="transition-all hover:text-black hover:dark:text-neutral-100" href="https://github.com/zackha/nuxtcommerce" target="_blank">
-        支持NuxtCommerce v{{ config.public.version }}
+      <a class="transition-all hover:text-black hover:dark:text-neutral-100" href="https://www.toptea.top" target="_blank">
+        支持
       </a>
-      —
-      {{ $t('footer.developed_by_author') }}
-      <a class="transition-all hover:text-black hover:dark:text-neutral-100" href="https://zackha.com" target="_blank">Sefa Bulak</a>
     </div>
 
     <div class="flex flex-none items-center gap-3">
