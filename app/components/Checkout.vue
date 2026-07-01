@@ -24,17 +24,32 @@ const cartTotal = computed(() => {
     <form @submit.prevent="handleCheckout" class="flex flex-col items-center justify-center">
       <div class="grid grid-cols-2 gap-3 billing w-full">
         
+
+       <div class="col-span-full">
+          <input required v-model="userDetails.email" :placeholder="$t('checkout.form.email')" name="email" type="email" class="" />
+        </div>
         <div class="col-span-1">
           <input required v-model="userDetails.firstName" :placeholder="$t('checkout.form.first_name')" name="first-name" type="text" />
         </div>
-        
+        <div class="col-span-1">
+          <input required v-model="userDetails.lastName" :placeholder="$t('checkout.form.last_name')" name="last-name" type="text" />
+        </div>
         <div class="col-span-1">
           <input required v-model="userDetails.phone" :placeholder="$t('checkout.form.phone')" name="phone" type="text" />
         </div>
-       
+        <div class="col-span-1">
+          <input required v-model="userDetails.city" :placeholder="$t('checkout.form.city')" name="city" type="text" />
+        </div>
         <div class="col-span-full">
           <textarea required v-model="userDetails.address1" :placeholder="$t('checkout.form.address')" name="address" rows="2"></textarea>
         </div>
+
+
+
+
+
+
+        
       </div>
       <div class="text-sm font-semibold p-4 text-neutral-600 dark:text-neutral-400">
         {{
