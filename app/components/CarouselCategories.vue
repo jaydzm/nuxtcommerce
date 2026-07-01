@@ -48,8 +48,8 @@ const endDrag = () => {
 
 const updateButtonVisibility = () => {
   const { scrollLeft, scrollWidth, clientWidth } = cardsSlider.value;
-  showPrev.value = scrollLeft > 16;
-  showNext.value = scrollLeft < scrollWidth - clientWidth - 16;
+  showPrev.value = scrollLeft > 5;
+  showNext.value = scrollLeft < scrollWidth - clientWidth - 5;
 };
 
 onMounted(() => {
