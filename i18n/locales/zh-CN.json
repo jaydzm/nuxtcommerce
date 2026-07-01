@@ -4,10 +4,10 @@
     "loading": "加载..."
   },
   "theme": {
-    "dark": "Dunkel",
-    "light": "Hell",
-    "system": "System",
-    "toggle": "Thema wechseln"
+    "dark": "黑色",
+    "light": "白色",
+    "system": "体统",
+    "toggle": "切换"
   },
   "nav": {
     "home": "主页",
@@ -16,33 +16,33 @@
     "products": "产品"
   },
   "footer": {
-    "developed_by_author": "von {author}",
-    "change_language": "改变语言"
+    "developed_by_author": "由 {author}",
+    "change_language": "切换语言"
   },
   "search": {
     "placeholder": "搜索...",
-    "placeholder_in_category": "In {category} suchen...",
-    "no_results_for_query": "Keine Ergebnisse für {query}",
-    "no_results_suggestion": "Verbessern Sie Ihre Ergebnisse, indem Sie die Rechtschreibung überprüfen oder ein allgemeineres Stichwort verwenden.",
-    "view_all_results": "Alle Ergebnisse anzeigen",
-    "new_products": "Neue Produkte",
-    "no_products_matching": "Keine passenden Produkte",
-    "no_products_found_matching": "Keine passenden Produkte gefunden",
-    "no_products_found": "Keine Produkte gefunden",
-    "use_search_bar_above": "Sie können die Suchleiste oben verwenden, um mit anderen Begriffen zu suchen.",
-    "in": "in",
-    "reset_search": "Suche zurücksetzen"
+    "placeholder_in_category": "在 {category} 搜索...",
+    "no_results_for_query": "搜索不到 {query}",
+    "no_results_suggestion": "您可以更换内容.",
+    "view_all_results": "所有内容",
+    "new_products": "新产品",
+    "no_products_matching": "没有合适的产品",
+    "no_products_found_matching": "未找到合适的产品",
+    "no_products_found": "未找到产品",
+    "use_search_bar_above": "你可以使用上方的搜索栏来搜索其他词语.",
+    "in": "在",
+    "reset_search": "重置搜索"
   },
   "filter": {
     "all_categories": "全部",
-    "newest": "Neueste",
-    "price_low_high": "Preis: Niedrig bis Hoch",
-    "price_high_low": "Preis: Hoch bis Niedrig"
+    "newest": "最新",
+    "price_low_high": "价格由低到高",
+    "price_high_low": "价格由高到低"
   },
   "checkout": {
-    "title": "Kasse",
+    "title": "标题",
     "form": {
-      "first_name": "姓",
+      "first_name": "姓名",
       "last_name": "名",
       "email": "邮箱",
       "phone": "电话",
@@ -50,31 +50,31 @@
       "address": "地址"
     },
     "pay": {
-      "description": "Gesamtzahlung von {total} für {items} Artikel",
-      "btn": "{total} bezahlen",
-      "secure": "Ihre Zahlung ist durch {method} gesichert",
-      "success": "Zahlung erfolgreich!",
-      "processed": "Vielen Dank für Ihren Einkauf! Ihre Bestellung wird bearbeitet.",
-      "total": "Gesamt",
-      "order_number": "Bestellnummer",
-      "date": "Datum",
-      "payment_method": "Zahlungsmethode"
+      "description": "共计 {total} 和 {items} 件",
+      "btn": "{total} 共计",
+      "secure": "免费茶样保障发货",
+      "success": "下单成功!",
+      "processed": "非常感谢您下单茶样！您的订单正在处理中.",
+      "total": "共计",
+      "order_number": "编号",
+      "date": "日期",
+      "payment_method": "下单方式"
     }
   },
   "product": {
-    "originally": "Ursprünglich",
-    "size": "Größe",
-    "quantity": "Menge",
-    "sku": "Artikelnummer",
-    "vat_included": "MwSt. inbegriffen",
-    "featured_information": "Ausgewählte Informationen",
-    "free_return": "Kostenlose Rücksendung innerhalb von 15 Tagen. Klicken Sie hier für weitere Informationen.",
-    "information": "Informationen",
-    "shop_similar": "Ähnliche Artikel kaufen"
+    "originally": "原本",
+    "size": "份量",
+    "quantity": "数量",
+    "sku": "货号",
+    "vat_included": "含税",
+    "featured_information": "精选信息",
+    "free_return": "15天内免费对接。点击这里了解更多信息.",
+    "information": "信息",
+    "shop_similar": "类似产品"
   },
   "cart": {
-    "empty": "Ihr Warenkorb ist leer",
-    "notting_added": "Sie haben noch keine Artikel in Ihren Warenkorb gelegt.",
+    "empty": "购物车是空的",
+    "notting_added": "您还没有将任何商品加入购物车.",
     "add_to_cart": "免费领取茶样",
     "added_to_cart": "已添加茶"
   },
