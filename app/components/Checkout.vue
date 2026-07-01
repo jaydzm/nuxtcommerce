@@ -35,9 +35,7 @@ const cartTotal = computed(() => {
         <div class="col-span-full">
           <input required v-model="userDetails.phone" :placeholder="$t('checkout.form.phone')" name="phone" type="text" />
         </div>
-        <div class="col-span-1">
-          <input required v-model="userDetails.city" :placeholder="$t('checkout.form.city')" name="city" type="text" />
-        </div>
+     
         <div class="col-span-full">
           <textarea required v-model="userDetails.address1" :placeholder="$t('checkout.form.address')" name="address" rows="2"></textarea>
         </div>
