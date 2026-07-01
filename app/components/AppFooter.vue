@@ -29,9 +29,7 @@ const chooseLocale = code => {
       <a class="transition-all hover:text-black hover:dark:text-neutral-100" href="/" target="_blank">
       口感快车纯天然食材
       </a>
-      —
-      {{ $t('footer.developed_by_author') }}
-      <a class="transition-all hover:text-black hover:dark:text-neutral-100" href="https://zackha.com" target="_blank">Sefa Bulak</a>
+
     </div>
 
     <div class="flex flex-none items-center gap-3">
