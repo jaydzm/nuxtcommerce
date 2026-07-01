@@ -94,7 +94,31 @@ const totalQuantity = computed(() => cart.value.reduce((s, i) => s + (i.quantity
       </NuxtLink>
 
 
-
+       <div class="flex flex-shrink flex-grow flex-col text-sm font-semibold text-[#111] dark:text-[#eee]">
+        <div
+          :class="[
+            'flex h-12 flex-grow rounded-full  pl-4 pr-3 transition-all hover:bg-black/10 hover:dark:bg-white/20',
+            suggestionMenu ? 'bg-black/10 dark:bg-white/20' : 'bg-black/5 dark:bg-white/15',
+          ]">
+          <div @click="suggestionMenu = true" class="flex w-full items-center gap-4">
+            <div v-if="!suggestionMenu" class="flex text-neutral-500 dark:text-neutral-400">
+              <UIcon name="i-iconamoon-search-bold" size="20" />
+            </div>
+            <div class="flex w-full">
+              <input
+                class="w-full bg-transparent py-2 outline-none placeholder:text-[#757575] placeholder:dark:text-neutral-400"
+                type="text"
+                v-model="searchQuery"
+                @keyup.enter="search"
+                :placeholder="route.query.category ? $t('search.placeholder_in_category', { category: route.query.category }) : $t('search.placeholder')" />
+              <div v-if="searchQuery || suggestionMenu" @click.stop="clearSearch" class="flex items-center justify-center cursor-pointer transition-all">
+                <UIcon v-if="!isLoading" class="text-black dark:text-white" name="i-iconamoon-close-circle-1-fill" size="24" />
+                <UIcon v-else name="i-svg-spinners-bars-rotate-fade" size="20" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
 
       
