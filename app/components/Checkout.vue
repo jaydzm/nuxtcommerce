@@ -23,9 +23,7 @@ const cartTotal = computed(() => {
     <div class="text-xl font-bold px-2 mb-3">Checkout</div>
     <form @submit.prevent="handleCheckout" class="flex flex-col items-center justify-center">
       <div class="grid grid-cols-2 gap-3 billing w-full">
-        <div class="col-span-full">
-          <input required v-model="userDetails.email" :placeholder="$t('checkout.form.email')" name="email" type="email" class="" />
-        </div>
+        
         <div class="col-span-1">
           <input required v-model="userDetails.firstName" :placeholder="$t('checkout.form.first_name')" name="first-name" type="text" />
         </div>
