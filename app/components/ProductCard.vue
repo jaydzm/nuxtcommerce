@@ -28,7 +28,6 @@ defineProps({
         <div class="grid gap-0.5 pt-3 pb-4 px-1.5 text-sm font-semibold">
           <ProductPrice :sale-price="product.salePrice" :regular-price="product.regularPrice" variant="card" />
           <div>{{ product.name }}</div>
-         
         </div>
       </div>
     </NuxtLink>
