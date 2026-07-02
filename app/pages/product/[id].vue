@@ -131,7 +131,7 @@ const { handleAddToCart, addToCartButtonStatus } = useCart();
                   {{ $t('product.free_return') }}
                   <a class="underline" href="#">{{ $t('product.information') }}</a>
                 </li>
-                <li>{{ $t('product.sku') }}: {{ product.sku }}</li>
+                
                 <div v-html="product.description"></div>
               </ul>
             </div>
