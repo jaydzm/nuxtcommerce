@@ -104,40 +104,11 @@ const { handleAddToCart, addToCartButtonStatus } = useCart();
             <h1 class="text-2xl font-semibold mb-1">{{ product.name }}</h1>
             <ProductPrice :sale-price="product.salePrice" :regular-price="product.regularPrice" />
           </div>
-          <div class="flex gap-2 px-3 lg:px-0" v-for="(variation, i) in product.productTypes?.nodes" :key="i">
-            <div v-for="(vars, i) in variation.products.nodes" :key="i">
-              <NuxtLink
-                :to="localePath(`/product/${vars.slug}-${product.sku.split('-')[0]}`)"
-                :class="[
-                  'flex w-12 rounded-lg border-2 select-varitaion transition-all duration-200 bg-neutral-200 dark:bg-neutral-800',
-                  vars.allPaColor.nodes[0].name === product.allPaColor.nodes[0].name ? 'selected-varitaion' : 'border-[#9b9b9b] dark:border-[#8c8c8c]',
-                ]">
-                <NuxtImg
-                  :alt="vars.allPaColor.nodes[0].name"
-                  :src="vars.image.sourceUrl"
-                  :title="vars.allPaColor.nodes[0].name"
-                  class="rounded-md border-2 border-white dark:border-black" />
-              </NuxtLink>
-            </div>
-          </div>
+          
 
           <div class="pb-4 px-3 lg:px-0 border-b border-[#efefef] dark:border-[#262626]">
-            <div class="text-sm font-semibold leading-5 opacity-50 flex gap-1">
-              {{ $t('product.size') }}:
-              <div class="uppercase">{{ selectedVariation.attributes.nodes.map(attr => attr.value).toString() }}</div>
-            </div>
-            <div class="flex gap-2 mt-2 mb-4 flex-wrap">
-              <label
-                class="py-1 px-3 rounded-md cursor-pointer select-varitaion border-2 border-[#9b9b9b] dark:border-[#8c8c8c] transition-all duration-200"
-                v-for="variation in sortedVariations"
-                :key="variation.databaseId"
-                :class="[variation.stockStatus === 'OUT_OF_STOCK' ? 'disabled' : '', selectedVariation.databaseId === variation.databaseId ? 'selected-varitaion' : '']">
-                <input type="radio" class="hidden" name="variation" :value="variation" :disabled="variation.stockStatus === 'OUT_OF_STOCK'" v-model="selectedVariation" />
-                <span class="font-semibold uppercase" :title="`Size: ${variation.attributes.nodes.map(attr => attr.value).toString()}`">
-                  {{ variation.attributes.nodes.map(attr => attr.value).toString() }}
-                </span>
-              </label>
-            </div>
+            
+            
             <div class="flex">
               <button
                 @click="handleAddToCart(selectedVariation.databaseId)"
