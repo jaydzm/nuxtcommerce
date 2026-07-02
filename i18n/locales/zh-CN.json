@@ -51,7 +51,7 @@
     },
     "pay": {
       "description": "共计 {total} 和 {items} 件",
-      "btn": "{total} 共计",
+      "btn": "0元下单",
       "secure": "免费茶样保障发货",
       "success": "下单成功!",
       "processed": "非常感谢您下单茶样！您的订单正在处理中.",
