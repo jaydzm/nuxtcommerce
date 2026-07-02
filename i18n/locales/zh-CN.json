@@ -63,12 +63,12 @@
   },
   "product": {
     "originally": "原本",
-    "size": "份量",
+    "size": "茶样重量（克）",
     "quantity": "数量",
     "sku": "货号",
     "vat_included": "元/千克",
     "featured_information": "精选信息",
-    "free_return": "15天内免费对接。点击这里了解更多信息.",
+    "free_return": "好茶也怕巷子深，所有茶样均免费包邮.",
     "information": "信息",
     "shop_similar": "类似产品"
   },
