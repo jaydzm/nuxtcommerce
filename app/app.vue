@@ -3,7 +3,7 @@ const { site } = useAppConfig();
 const { name, description } = site;
 
 useHead({
-  htmlAttrs: { lang: 'en' },
+  htmlAttrs: { lang: 'cn' },
   titleTemplate: (chunk?: string) => (chunk ? `${chunk} - ${name}` : name),
 });
 
@@ -12,12 +12,9 @@ useSeoMeta({
   ogType: 'website',
   ogSiteName: name,
   ogLocale: 'en_US',
-  ogImage: 'https://commerce.nuxt.dev/social-card.jpg',
-  twitterCard: 'summary_large_image',
-  twitterSite: '@zhatlen',
-  twitterCreator: '@zhatlen',
-  twitterImage: 'https://commerce.nuxt.dev/social-card.jpg',
-  keywords: `${name}, ecommerce, nuxt, woocommerce`,
+  ogImage: 'https://commerce.nuxt.dev/social-card.webp',
+  twitterImage: 'https://commerce.nuxt.dev/social-card.webp',
+  keywords: `${name}, 茶样, 古树茶, 高端茶`,
   charset: 'utf-8',
   viewport: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover',
 });
