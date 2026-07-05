@@ -51,8 +51,8 @@
     },
     "pay": {
       "description": "共计{items} 件茶样",
-      "btn": "0元下单",
-      "secure": "免费茶样保障发货",
+      "btn": "下单",
+      "secure": "茶样使用中通快递发货",
       "success": "下单成功!",
       "processed": "非常感谢您下单茶样！您的订单正在处理中.",
       "total": "共计",
@@ -68,14 +68,14 @@
     "sku": "货号",
     "vat_included": "元/千克",
     "featured_information": "精选信息",
-    "free_return": "所有茶样均免费包邮.",
+    "free_return": "下单后会联系您.",
     "information": "信息",
     "shop_similar": "类似产品"
   },
   "cart": {
     "empty": "购物车是空的",
     "notting_added": "您还没有将任何商品加入购物车.",
-    "add_to_cart": "免费领取茶样",
+    "add_to_cart": "领取茶样",
     "added_to_cart": "已添加茶"
   },
   "favorites": {
