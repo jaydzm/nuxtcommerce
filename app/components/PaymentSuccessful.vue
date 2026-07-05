@@ -22,8 +22,8 @@ const { order } = useCheckout();
         <span class="font-semibold">#{{ order.orderNumber }}</span>
       </div>
       <div class="flex justify-between items-center">
-        <span class="dark:text-neutral-400 text-neutral-600">{{ $t('checkout.pay.date') }}:</span>
-        <span class="font-semibold">{{ useDateFormat(order.date, 'MMMM DD, YYYY') }}</span>
+        <span class="dark:text-neutral-400 text-neutral-600">快递单号:</span>
+        <span class="font-semibold">我们会联系您发送单号</span>
       </div>
       <div class="flex justify-between items-center">
         <span class="dark:text-neutral-400 text-neutral-600">{{ $t('checkout.pay.payment_method') }}:</span>
