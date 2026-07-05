@@ -2,7 +2,7 @@
 export default defineAppConfig({
   site: {
     name: '口感快车',
-    description: 'NuxtCommerce is a dynamic e-commerce solution developed with Nuxt 4 and GraphQL, tailored for WooCommerce.',
+    description: '纯天然茶叶打造，免费领取试喝茶样.',
   },
   ui: {
     primary: 'red',
