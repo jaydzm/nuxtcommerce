@@ -64,13 +64,7 @@ const totalQuantity = computed(() => cart.value.reduce((s, i) => s + (i.quantity
         :to="localePath('/')">
         <img class="rounded-lg max-lg:rounded-full bg-[#b31015] w-8 h-8" src="/logo.svg" alt="Logo" loading="lazy" title="logo" />
       </NuxtLink>
-      <NuxtLink
-        aria-label="category"
-        exactActiveClass="bg-black dark:bg-white text-white dark:text-black"
-        class="font-semibold cursor-pointer px-4 rounded-full hover:bg-black hover:dark:bg-white h-12 items-center justify-center hover:text-white hover:dark:text-black transition active:scale-95 lg:flex hidden"
-        :to="localePath('/categories')">
-        {{ $t('nav.categories') }}
-      </NuxtLink>
+     
       <NuxtLink
         aria-label="Favorites"
         exactActiveClass="bg-black dark:bg-white text-white dark:text-black"
@@ -78,13 +72,7 @@ const totalQuantity = computed(() => cart.value.reduce((s, i) => s + (i.quantity
         :to="localePath('/favorites')">
         {{ $t('nav.favorites') }}
       </NuxtLink>
-      <NuxtLink
-        aria-label="Categories"
-        exactActiveClass="!bg-black/10 dark:!bg-white/30"
-        class="lg:hidden flex items-center justify-center min-w-12 min-h-12 rounded-full bg-black/5 dark:bg-white/15 hover:bg-black/10 hover:dark:bg-white/20 transition active:scale-95"
-        :to="localePath('/categories')">
-        <UIcon class="text-[#5f5f5f] dark:text-[#b7b7b7]" name="i-iconamoon-category-fill" size="26" />
-      </NuxtLink>
+      
       <NuxtLink
         aria-label="Favorites"
         exactActiveClass="!bg-black/10 dark:!bg-white/30"
