@@ -68,7 +68,7 @@
     "sku": "货号",
     "vat_included": "元/千克",
     "featured_information": "精选信息",
-    "free_return": "好茶也怕巷子深，所有茶样均免费包邮.",
+    "free_return": "所有茶样均免费包邮.",
     "information": "信息",
     "shop_similar": "类似产品"
   },
@@ -80,6 +80,6 @@
   },
   "favorites": {
     "nothing_to_show_yet": "没什么!",
-    "wishlist_lives_here": "点喜欢的小星星..."
+    "wishlist_lives_here": "点喜欢产品的小星星..."
   }
 }
