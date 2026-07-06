@@ -45,7 +45,17 @@ export default defineNuxtConfig({
     "/favorites": { swr: 600 },
   },
 
- 
+  image: {
+    // 使用 static 提供者，不做任何优化处理
+    provider: 'static',
+    
+    // 但保留缓存功能
+    // 列出图片来源域名，让 Vercel 可以代理和缓存
+    domains: [
+      'www.toppuer.top',
+      // 添加你的其他图片域名
+    ],
+  },
   
   
 
