@@ -6,6 +6,18 @@ export default defineNuxtConfig({
 
   modules: ["@vueuse/nuxt", "@nuxt/ui", "@nuxt/image", "notivue/nuxt", "@nuxtjs/i18n", "@nuxthub/core"],
 
+
+   image: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'www.toppuer.top',  // 替换成你的图片域名
+        pathname: '/**',
+      },
+    ],
+  },
+
+  
   i18n: {
     defaultLocale: "en",
     strategy: "prefix_except_default",
