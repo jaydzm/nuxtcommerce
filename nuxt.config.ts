@@ -45,15 +45,7 @@ export default defineNuxtConfig({
     "/favorites": { swr: 6000 },
   },
 
-  image: {
-    // 但保留缓存功能
-    // 列出图片来源域名，让 Vercel 可以代理和缓存
-    domains: [
-      'www.toppuer.top',
-      // 添加你的其他图片域名
-    ],
-  },
-  
+
   
 
   compatibilityDate: "2025-01-01",
