@@ -11,7 +11,7 @@ export default defineNuxtConfig({
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'www.toppuer.top',  // 替换成你的图片域名
+        hostname: '*',  // 替换成你的图片域名
         pathname: '/**',
       },
     ],
