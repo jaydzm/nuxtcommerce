@@ -7,6 +7,7 @@ export default defineNuxtConfig({
   modules: ["@vueuse/nuxt", "@nuxt/ui", "@nuxt/image", "notivue/nuxt", "@nuxtjs/i18n", "@nuxthub/core"],
 
     image: {
+    provider: 'vercel', 
     remotePatterns: [
       {
         protocol: 'https',
