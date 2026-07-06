@@ -41,14 +41,11 @@ export default defineNuxtConfig({
 
   routeRules: {
     "/": { prerender: true },
-    "/categories": { swr: 10 },
-    "/favorites": { swr: 600 },
+    "/categories": { swr: 10000 },
+    "/favorites": { swr: 6000 },
   },
 
   image: {
-    // 使用 static 提供者，不做任何优化处理
-    provider: 'static',
-    
     // 但保留缓存功能
     // 列出图片来源域名，让 Vercel 可以代理和缓存
     domains: [
