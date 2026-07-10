@@ -68,7 +68,7 @@
     "sku": "货号",
     "vat_included": "元/千克",
     "featured_information": "精选信息",
-    "free_return": "下单后会联系您.",
+    "free_return": "下单后通过短信通知快递单号.",
     "information": "信息",
     "shop_similar": "类似产品"
   },
