@@ -54,6 +54,7 @@ onMounted(() => {
   <Notivue v-slot="item">
     <Notification :item="item" :theme="materialTheme" />
   </Notivue>
+   <Script src="https://cloud.umami.is/script.js" data-website-id="eb7e1d43-b80b-4bc8-937f-b238d8a749a8" async />
 </template>
 
 <style lang="postcss">
