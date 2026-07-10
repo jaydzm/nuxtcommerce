@@ -85,7 +85,17 @@ const chooseLocale = code => {
       </UTooltip>
     </div>
 
-     <GoogleAnalytics />
+    <ClientOnly>
+      <div>
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-Q6SH4F3C8Q"></script>
+        <script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-Q6SH4F3C8Q');
+      </div>
+    </ClientOnly>
     
   </footer>
 </template>
