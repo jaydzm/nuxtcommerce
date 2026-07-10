@@ -30,26 +30,6 @@ const chooseLocale = code => {
       口感快车纯天然食材
       </a>
     </div>
-
-
-    
-      <div>
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-Q6SH4F3C8Q"></script>
-        <script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-Q6SH4F3C8Q');
-        </script>
-      </div>
-    
-
-
-
-
-
-
     
     <div class="flex flex-none items-center gap-3">
       <!-- Language -->
