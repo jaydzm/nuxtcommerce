@@ -86,14 +86,3 @@ const chooseLocale = code => {
     </div>
   </footer>
 </template>
-
-
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-Q6SH4F3C8Q"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-Q6SH4F3C8Q');
-</script>
