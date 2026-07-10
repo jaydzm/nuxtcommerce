@@ -4,7 +4,7 @@ import pkg from "./package.json";
 export default defineNuxtConfig({
   devtools: { enabled: false },
 
-  modules: ["@vueuse/nuxt", "@nuxt/ui", "@nuxt/image", "notivue/nuxt", "@nuxtjs/i18n", "@nuxthub/core", "nuxt-umami"],
+  modules: ["@vueuse/nuxt", "@nuxt/ui", "@nuxt/image", "notivue/nuxt", "@nuxtjs/i18n", "@nuxthub/core"],
 
     image: {
     provider: 'vercel', 
