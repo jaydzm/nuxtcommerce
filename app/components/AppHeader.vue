@@ -98,7 +98,7 @@ const totalQuantity = computed(() => cart.value.reduce((s, i) => s + (i.quantity
                 type="text"
                 v-model="searchQuery"
                 @keyup.enter="search"
-                :placeholder="route.query.category ? $t('search.placeholder_in_category', { category: route.query.category }) : $t('search.placeholder')" />
+                :placeholder="route.query.category ? $t('search.placeholder_in_category', { category: route.query.category }) : $t('...')" />
               <div v-if="searchQuery || suggestionMenu" @click.stop="clearSearch" class="flex items-center justify-center cursor-pointer transition-all">
                 <UIcon v-if="!isLoading" class="text-black dark:text-white" name="i-iconamoon-close-circle-1-fill" size="24" />
                 <UIcon v-else name="i-svg-spinners-bars-rotate-fade" size="20" />
