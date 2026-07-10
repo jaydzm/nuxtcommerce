@@ -4,7 +4,7 @@ import pkg from "./package.json";
 export default defineNuxtConfig({
   devtools: { enabled: false },
 
-  modules: ["@vueuse/nuxt", "@nuxt/ui", "@nuxt/image", "notivue/nuxt", "@nuxtjs/i18n", "@nuxthub/core", "nuxt-umami"],
+  modules: ["@vueuse/nuxt", "@nuxt/ui", "@nuxt/image", "notivue/nuxt", "@nuxtjs/i18n", "@nuxthub/core"],
 
     image: {
     provider: 'vercel', 
@@ -62,13 +62,6 @@ export default defineNuxtConfig({
     prerender: { routes: ["/sitemap.xml", "/robots.txt"] },
   },
 
-
-   umami: {
-    host: 'https://cloud.umami.is',
-    id: 'eb7e1d43-b80b-4bc8-937f-b238d8a749a8',
-    autoTrack: true,
-  },
-  
 
   compatibilityDate: "2025-01-01",
 });
