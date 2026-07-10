@@ -25,6 +25,7 @@
     "nuxt": "^4.4.2",
     "swiper": "^12.1.2",
     "vue": "latest"
+    "nuxt-umami": "^2.0.0"
   },
   "devDependencies": {
     "@iconify-json/iconamoon": "^1.2.2",
