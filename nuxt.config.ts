@@ -63,6 +63,12 @@ export default defineNuxtConfig({
   },
 
 
+   umami: {
+    host: 'https://cloud.umami.is',
+    id: 'eb7e1d43-b80b-4bc8-937f-b238d8a749a8',
+    autoTrack: true,
+  },
+  
 
   compatibilityDate: "2025-01-01",
 });
