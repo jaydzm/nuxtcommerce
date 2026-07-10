@@ -1,11 +1,13 @@
-<script setup lang="ts">  
-const { site } = useAppConfig();
-const { name, description } = site;
+<script setup lang="ts">
+import { onMounted } from 'vue'
+
+const { site } = useAppConfig()
+const { name, description } = site
 
 useHead({
   htmlAttrs: { lang: 'cn' },
   titleTemplate: (chunk?: string) => (chunk ? `${chunk} - ${name}` : name),
-});
+})
 
 useSeoMeta({
   description,
@@ -17,7 +19,30 @@ useSeoMeta({
   keywords: `${name}, 茶样, 古树茶, 高端茶`,
   charset: 'utf-8',
   viewport: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover',
-});
+})
+
+// 添加这部分 → 51LA 统计代码
+onMounted(() => {
+  // 加载 51LA SDK
+  const script = document.createElement('script')
+  script.src = 'https://sdk.51.la/js-sdk-pro.min.js'
+  script.id = 'LA_COLLECT'
+  script.async = true
+  script.setAttribute('charset', 'UTF-8')
+  document.head.appendChild(script)
+
+  // 配置 51LA
+  const config = {
+    id: '3QWESqerv71jwMMn',
+    ck: '3QWESqerv71jwMMn'
+  }
+  
+  // 初始化
+  if (!window.LA) {
+    window.LA = { ids: [] }
+  }
+  window.LA.ids.push(config)
+})
 </script>
 
 <template>
