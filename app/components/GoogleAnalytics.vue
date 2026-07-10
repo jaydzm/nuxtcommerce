@@ -14,5 +14,5 @@
 </template>
 
 <script setup>
-const gaId = 'G-Q6SH4F3C8Q' // 👈 换成你自己的
+const gaId = 'G-Q6SH4F3C8Q' 
 </script>
