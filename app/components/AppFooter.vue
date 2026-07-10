@@ -94,6 +94,7 @@ const chooseLocale = code => {
   gtag('js', new Date());
 
   gtag('config', 'G-Q6SH4F3C8Q');
+        </script>
       </div>
     </ClientOnly>
     
