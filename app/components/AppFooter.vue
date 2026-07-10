@@ -84,5 +84,8 @@ const chooseLocale = code => {
         </button>
       </UTooltip>
     </div>
+
+     <GoogleAnalytics />
+    
   </footer>
 </template>
