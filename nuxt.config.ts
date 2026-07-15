@@ -40,36 +40,7 @@ export default defineNuxtConfig({
     },
   },
 
-  // ✅ 图片缓存配置
-   image: {
-    provider: 'ipx',
-    // 确保域名在列表中
-    domains: ['www.toppuer.top'],
-    ipx: {
-      maxAge: 31536000,
-      // 关键：显式设置基础 URL，使用 HTTPS
-      baseURL: 'https://www.toppuer.top'
-    },
-    // modifySource 函数用于强化 URL 规范化
-    modifySource(src) {
-      if (!src) return src
-      // 确保所有源 URL 都使用 HTTPS，且格式正确
-      let normalizedSrc = src.replace(/^https?:\/\//, 'https://')
-      return normalizedSrc
-    }
-  },
 
-  // ✅ 路由缓存规则
-  routeRules: {
-    "/": { prerender: true },
-    "/categories": { swr: 3600 },
-    "/favorites": { swr: 600 },
-    "/_ipx/**": {
-      headers: {
-        'Cache-Control': 'public, max-age=31536000, immutable'
-      }
-    }
-  },
 
   nitro: {
     preset: "vercel",
