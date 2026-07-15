@@ -41,21 +41,20 @@ export default defineNuxtConfig({
   },
 
   // ✅ 图片缓存配置
-  image: {
+   image: {
     provider: 'ipx',
+    // 确保域名在列表中
     domains: ['www.toppuer.top'],
     ipx: {
-      maxAge: 31536000
+      maxAge: 31536000,
+      // 关键：显式设置基础 URL，使用 HTTPS
+      baseURL: 'https://www.toppuer.top'
     },
-    // 确保所有图片 URL 使用 HTTPS
+    // modifySource 函数用于强化 URL 规范化
     modifySource(src) {
       if (!src) return src
-      // 1. 先处理缺少斜杠的协议: https:/ -> https://
-      let normalizedSrc = src.replace(/^https?:\/(?!\/)/, '$&/')
-      // 2. 确保是 HTTPS
-      if (normalizedSrc.startsWith('http://')) {
-        normalizedSrc = normalizedSrc.replace('http://', 'https://')
-      }
+      // 确保所有源 URL 都使用 HTTPS，且格式正确
+      let normalizedSrc = src.replace(/^https?:\/\//, 'https://')
       return normalizedSrc
     }
   },
