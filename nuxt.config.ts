@@ -46,6 +46,18 @@ export default defineNuxtConfig({
     domains: ['www.toppuer.top'],
     ipx: {
       maxAge: 31536000
+    },
+    // 确保所有图片 URL 使用 HTTPS
+    modifySource: (src) => {
+      // 如果 src 是 http:// 开头，替换为 https://
+      if (src && src.startsWith('http://')) {
+        return src.replace('http://', 'https://')
+      }
+      // 如果是相对路径，补全为完整的 HTTPS URL
+      if (src && src.startsWith('//')) {
+        return `https:${src}`
+      }
+      return src
     }
   },
 
