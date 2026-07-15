@@ -17,7 +17,7 @@ export default defineNuxtConfig({
       alwaysRedirect: true,
     },
     locales: [
-      { code: "cn", iso: "cn-GB", file: "cn-NL.json", name: "china" },
+      { code: "cn", iso: "cn-GB", file: "zh-CN.json", name: "china" },
       { code: "en", iso: "en-GB", file: "en-GB.json", name: "🇬🇧 English" },
       { code: "nb", iso: "nb-NO", file: "nb-NO.json", name: "🇳🇴 Norsk (Bokmål)" },
       { code: "nl", iso: "nl-NL", file: "nl-NL.json", name: "🇳🇱 Nederlands" },
