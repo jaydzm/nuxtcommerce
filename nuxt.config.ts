@@ -42,6 +42,7 @@ export default defineNuxtConfig({
 
   // ✅ 图片缓存配置
   image: {
+    provider: 'ipx',
     ipx: {
       maxAge: 31536000
     }
