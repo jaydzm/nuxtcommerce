@@ -43,6 +43,7 @@ export default defineNuxtConfig({
   // ✅ 图片缓存配置
   image: {
     provider: 'ipx',
+    domains: ['www.toppuer.top'],
     ipx: {
       maxAge: 31536000
     }
