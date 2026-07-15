@@ -4,7 +4,7 @@ import pkg from "./package.json";
 export default defineNuxtConfig({
   devtools: { enabled: false },
 
-  modules: ["@vueuse/nuxt", "@nuxt/ui", "@nuxt/image", "notivue/nuxt", "@nuxtjs/i18n"],
+  modules: ["@vueuse/nuxt", "@nuxt/ui", "@nuxt/image", "notivue/nuxt", "@nuxtjs/i18n", "@nuxthub/core"],
 
   i18n: {
     defaultLocale: "cn",
@@ -17,7 +17,6 @@ export default defineNuxtConfig({
       alwaysRedirect: true,
     },
     locales: [
-      { code: "cn", iso: "cn-GB", file: "zh-CN.json", name: "china" },
       { code: "en", iso: "en-GB", file: "en-GB.json", name: "🇬🇧 English" },
       { code: "nb", iso: "nb-NO", file: "nb-NO.json", name: "🇳🇴 Norsk (Bokmål)" },
       { code: "nl", iso: "nl-NL", file: "nl-NL.json", name: "🇳🇱 Nederlands" },
@@ -40,11 +39,22 @@ export default defineNuxtConfig({
     },
   },
 
-
+  routeRules: {
+    "/": { prerender: true },
+    "/categories": { swr: 3600 },
+    "/favorites": { swr: 600 },
+  },
 
   nitro: {
-    preset: "vercel",
+    preset: "cloudflare_pages",
     prerender: { routes: ["/sitemap.xml", "/robots.txt"] },
+  },
+
+  hub: {
+    cache: {
+      driver: "cloudflare-kv-binding",
+      binding: "CACHE",
+    },
   },
 
   compatibilityDate: "2025-01-01",
