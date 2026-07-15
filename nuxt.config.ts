@@ -4,7 +4,7 @@ import pkg from "./package.json";
 export default defineNuxtConfig({
   devtools: { enabled: false },
 
-  modules: ["@vueuse/nuxt", "@nuxt/ui", "@nuxt/image", "notivue/nuxt", "@nuxtjs/i18n", "@nuxthub/core"],
+  modules: ["@vueuse/nuxt", "@nuxt/ui", "@nuxt/image", "notivue/nuxt", "@nuxtjs/i18n"],
 
   i18n: {
     defaultLocale: "en",
@@ -39,22 +39,28 @@ export default defineNuxtConfig({
     },
   },
 
+  // ✅ 图片缓存配置
+  image: {
+    ipx: {
+      maxAge: 31536000
+    }
+  },
+
+  // ✅ 路由缓存规则
   routeRules: {
     "/": { prerender: true },
     "/categories": { swr: 3600 },
     "/favorites": { swr: 600 },
+    "/_ipx/**": {
+      headers: {
+        'Cache-Control': 'public, max-age=31536000, immutable'
+      }
+    }
   },
 
   nitro: {
-    preset: "cloudflare_pages",
+    preset: "vercel",
     prerender: { routes: ["/sitemap.xml", "/robots.txt"] },
-  },
-
-  hub: {
-    cache: {
-      driver: "cloudflare-kv-binding",
-      binding: "CACHE",
-    },
   },
 
   compatibilityDate: "2025-01-01",
