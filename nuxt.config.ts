@@ -6,6 +6,18 @@ export default defineNuxtConfig({
 
   modules: ["@vueuse/nuxt", "@nuxt/ui", "@nuxt/image", "notivue/nuxt", "@nuxtjs/i18n", "@nuxthub/core"],
 
+    image: {
+    provider: 'vercel', 
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '*',  // 替换成你的图片域名
+        pathname: '/**',
+      },
+    ],
+  },
+
+  
   i18n: {
     defaultLocale: "cn",
     strategy: "prefix_except_default",
@@ -18,9 +30,9 @@ export default defineNuxtConfig({
     },
     locales: [
       { code: "en", iso: "en-GB", file: "en-GB.json", name: "🇬🇧 English" },
-      { code: "cn", iso: "zh-cn", file: "zh-cn.json", name: "cn" },
+      { code: "cn", iso: "zh-CN", file: "zh-CN.json", name: "中文" },
+      { code: "nb", iso: "nb-NO", file: "nb-NO.json", name: "🇳🇴 Norsk (Bokmål)" },
       { code: "nl", iso: "nl-NL", file: "nl-NL.json", name: "🇳🇱 Nederlands" },
-      { code: "de", iso: "de-DE", file: "de-DE.json", name: "🇩🇪 Deutsch" },
     ],
   },
 
@@ -41,21 +53,15 @@ export default defineNuxtConfig({
 
   routeRules: {
     "/": { prerender: true },
-    "/categories": { swr: 3600 },
-    "/favorites": { swr: 600 },
+    "/categories": { swr: 10000 },
+    "/favorites": { swr: 6000 },
   },
 
   nitro: {
-    preset: "cloudflare_pages",
+    // preset: "cloudflare_pages",
     prerender: { routes: ["/sitemap.xml", "/robots.txt"] },
   },
 
-  hub: {
-    cache: {
-      driver: "cloudflare-kv-binding",
-      binding: "CACHE",
-    },
-  },
 
   compatibilityDate: "2025-01-01",
 });
