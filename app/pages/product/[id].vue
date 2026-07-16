@@ -178,11 +178,13 @@ const { handleAddToCart, addToCartButtonStatus } = useCart();
 }
 
 .button-bezel {
-  box-shadow: 0 0 0 var(--button-outline, 0px) rgb(222, 92, 92, 0.3), inset 0 -1px 1px 0 rgba(0, 0, 0, 0.25), inset 0 1px 0 0 rgba(255, 255, 255, 0.3),
+  box-shadow: 0 0 0 var(--button-outline, 0px) rgba(7, 193, 96, 0.3), inset 0 -1px 1px 0 rgba(0, 0, 0, 0.25), inset 0 1px 0 0 rgba(255, 255, 255, 0.3),
     0 1px 2px 0 rgba(0, 0, 0, 0.5);
-  @apply bg-alizarin-crimson-700 outline-none tracking-[-0.125px] transition scale-[var(--button-scale,1)] duration-200;
+  @apply outline-none tracking-[-0.125px] transition scale-[var(--button-scale,1)] duration-200;
+  background-color: #07c160; 
+  
   &:hover {
-    @apply bg-alizarin-crimson-600;
+    background-color: #06ad56;
   }
   &:active {
     --button-outline: 4px;
