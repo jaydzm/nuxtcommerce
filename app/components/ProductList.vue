@@ -63,7 +63,7 @@ const props = defineProps({
   <div>
     <!-- 产品网格 -->
     <div class="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 3xl:grid-cols-7 gap-4">
-      <ProductCard v-for="product in products" :key="product.sku" :product="[product]" />
+      <ProductCard v-for="product in products" :key="product.sku" :products="[product]" />
     </div>
 
     <!-- 加载状态 -->
