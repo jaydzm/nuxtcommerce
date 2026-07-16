@@ -52,9 +52,23 @@ export default defineNuxtConfig({
   },
 
   routeRules: {
-    "/": { prerender: true },
-    "/categories": { swr: 10000 },
-    "/favorites": { swr: 6000 },
+   // 1. 静态首页：在构建时预渲染，速度最快
+    '/': { prerender: true },
+
+    // 2. 产品详情页：使用 ISR (增量静态再生)
+    //    首次访问时生成HTML，之后1小时内直接提供缓存，1小时后后台更新[citation:4][citation:8]
+    '/product/**': { isr: 3600 }, // 单位：秒
+
+    // 3. 分类页面：使用 SWR (Stale-While-Revalidate)
+    //    立即返回缓存（可能旧的），同时在后台更新新数据[citation:1][citation:4]
+    '/categories': { swr: 3600 },
+    '/favorites': { swr: 3600 },
+
+    // 4. 动态和个性化页面：完全在客户端渲染，不进行服务端缓存
+    '/cart': { ssr: false },
+    '/checkout': { ssr: false },
+    '/account/**': { ssr: false },
+    // 你可以根据项目实际路由添加更多规则
   },
 
   nitro: {
