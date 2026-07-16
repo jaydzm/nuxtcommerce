@@ -1,6 +1,4 @@
 <script setup lang="ts">
-// ✅ 在这里添加，位于所有代码之前
-defineOptions({ ssr: false })
   
 const { site } = useAppConfig()
 const { name, description } = site
