@@ -140,11 +140,15 @@ const { handleAddToCart, addToCartButtonStatus } = useCart();
       </div>
     </div>
   </div>
-  <div class="text-lg lg:text-xl lg:text-center font-semibold mt-4 pt-4 px-3 border-t border-[#efefef] dark:border-[#262626] lg:border-none">{{ $t('product.shop_similar') }}</div>
-  <div class="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 3xl:grid-cols-7 gap-4 px-3 lg:px-5 xl:px-8 mt-4 lg:mt-5">
-    <ProductCard :products="product.related?.nodes" />
-    <ProductsSkeleton v-if="!product.name" />
+
+   <div class="mt-12">
+    <h2 class="text-xl font-semibold mb-6">你可能还喜欢</h2>
+    <!-- 关键：传入当前产品的分类，显示同类产品 -->
+    <ProductList :categorySlug="product?.categories?.nodes?.[0]?.slug || ''" />
   </div>
+
+
+  
 </template>
 
 <style lang="postcss">
