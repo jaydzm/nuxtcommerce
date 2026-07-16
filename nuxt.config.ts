@@ -6,17 +6,24 @@ export default defineNuxtConfig({
 
   modules: ["@vueuse/nuxt", "@nuxt/ui", "@nuxt/image", "notivue/nuxt", "@nuxtjs/i18n", "@nuxthub/core"],
 
-    image: {
-    provider: 'vercel',
-    // 使用 domains 替代 remotePatterns（某些版本兼容性更好）
+  // ========== 图片配置：改为使用 static 提供者 ==========
+  image: {
+    // 从 'vercel' 改为 'static'，直接使用源站图片
+    provider: 'static',
+    
+    // 配置允许的域名
     domains: ['www.toppuer.top'],
-    // 保留 remotePatterns 作为补充
+    
+    // 远程图片模式配置
     remotePatterns: [
       {
         protocol: 'https',
         hostname: 'www.toppuer.top',
+        port: '',
+        pathname: '/**',
       },
     ],
+    
     // 屏幕断点配置（优化不同设备加载）
     screens: {
       xs: 320,
@@ -26,9 +33,13 @@ export default defineNuxtConfig({
       xl: 1280,
       xxl: 1536,
     },
+    
+    
+    // 图片格式配置
+    formats: ['webp', 'avif', 'jpg'],
   },
 
-  
+  // ========== 国际化配置 ==========
   i18n: {
     defaultLocale: "cn",
     strategy: "prefix_except_default",
@@ -45,14 +56,17 @@ export default defineNuxtConfig({
     ],
   },
 
+  // ========== Notivue 通知配置 ==========
   notivue: {
     position: "top-center",
     limit: 3,
     notifications: { global: { duration: 3000 } },
   },
 
+  // ========== CSS 配置 ==========
   css: ["notivue/notification.css", "notivue/animations.css"],
 
+  // ========== 运行时配置 ==========
   runtimeConfig: {
     gqlHost: process.env.GQL_HOST || "",
     public: {
@@ -60,40 +74,40 @@ export default defineNuxtConfig({
     },
   },
 
+  // ========== 路由规则配置 ==========
   routeRules: {
-  '/': { prerender: true },
+    '/': { prerender: true },
     '/product/**': { isr: 3600 },
     '/categories': { swr: 3600 },
     '/favorites': { swr: 3600 },
     '/cart': { ssr: true },
     '/checkout': { ssr: true },
     '/account/**': { ssr: true },
-    // 关键：为 Vercel 图片优化添加路由规则
-    '/_vercel/image/**': {
-      swr: 86400, // 缓存24小时
-    },
+    // 已删除 Vercel 图片缓存路由规则
+    // '/_vercel/image/**': { swr: 86400 },
   },
 
+  // ========== Nitro 服务器配置 ==========
   nitro: {
-     // 关键：为 Vercel 环境添加图片优化的特定配置
-    vercel: {
-      // 允许外部图片优化
-      external: true,
-    },
+    // 已删除 Vercel 特定配置
+    // vercel: {
+    //   external: true,
+    // },
+    
     prerender: { 
       routes: ["/sitemap.xml", "/robots.txt"] 
     },
-    // 确保图片请求不被缓存策略意外覆盖
+    
+    // 已删除 Vercel 图片路由规则
     routeRules: {
-      '/_vercel/image/**': {
-        swr: 86400,
-        headers: {
-          'Cache-Control': 'public, max-age=86400, stale-while-revalidate=604800',
-        },
-      },
+      // '/_vercel/image/**': {
+      //   swr: 86400,
+      //   headers: {
+      //     'Cache-Control': 'public, max-age=86400, stale-while-revalidate=604800',
+      //   },
+      // },
     },
   },
-
 
   compatibilityDate: "2025-01-01",
 });
