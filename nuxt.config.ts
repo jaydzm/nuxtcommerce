@@ -37,13 +37,11 @@ export default defineNuxtConfig({
       useCookie: true,
       cookieKey: "i18n_redirected",
       redirectOn: "root",
-      alwaysRedirect: true,
+      alwaysRedirect: false,
     },
     locales: [
       { code: "en", iso: "en-GB", file: "en-GB.json", name: "🇬🇧 English" },
       { code: "cn", iso: "zh-CN", file: "zh-CN.json", name: "中文" },
-      { code: "nb", iso: "nb-NO", file: "nb-NO.json", name: "🇳🇴 Norsk (Bokmål)" },
-      { code: "nl", iso: "nl-NL", file: "nl-NL.json", name: "🇳🇱 Nederlands" },
     ],
   },
 
