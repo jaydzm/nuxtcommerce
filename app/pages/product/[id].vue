@@ -141,7 +141,7 @@ const { handleAddToCart, addToCartButtonStatus } = useCart();
     </div>
   </div>
 
-   <div class="mt-12">
+   <div class="mt-12 px-3">
     <h2 class="text-xl font-semibold mb-6">您可能还喜欢</h2>
     <!-- 关键：传入当前产品的分类，显示同类产品 -->
     <ProductList :categorySlug="product?.categories?.nodes?.[0]?.slug || ''" />
