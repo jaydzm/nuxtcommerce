@@ -1,30 +1,30 @@
-<!--app/components/ProductCard.vue-->
 <script setup>
 const localePath = useLocalePath();
 
 defineProps({
-  products: Object,
+  product: {
+    type: Object,
+    required: true
+  }
 });
 </script>
 
 <template>
-  <article v-for="product in products">
+  <article>
     <NuxtLink :to="localePath(`/product/${product.slug}-${product.sku.split('-')[0]}`)" class="group select-none">
       <div class="cursor-pointer transition ease-[ease] duration-300">
         <div class="relative pb-[133%] dark:shadow-[0_8px_24px_rgba(0,0,0,.5)] rounded-2xl overflow-hidden">
           <NuxtImg
-            
             :alt="product.name"
             loading="lazy"
             :title="product.name"
-            :src="product.galleryImages.nodes[0].sourceUrl"
+            :src="product.image?.sourceUrl || product.galleryImages?.nodes?.[0]?.sourceUrl"
             class="absolute h-full w-full dark:bg-neutral-800 bg-neutral-200 object-cover" />
           <NuxtImg
-         
             :alt="product.name"
             loading="lazy"
             :title="product.name"
-            :src="product.image.sourceUrl"
+            :src="product.galleryImages?.nodes?.[0]?.sourceUrl || product.image?.sourceUrl"
             class="absolute h-full w-full dark:bg-neutral-800 bg-neutral-200 object-cover transition-opacity duration-300 group-hover:opacity-0" />
         </div>
         <div class="grid gap-0.5 pt-3 pb-4 px-1.5 text-sm font-semibold">
