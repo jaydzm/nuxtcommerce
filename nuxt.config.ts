@@ -65,9 +65,9 @@ export default defineNuxtConfig({
     '/product/**': { isr: 3600 },
     '/categories': { swr: 3600 },
     '/favorites': { swr: 3600 },
-    '/cart': { ssr: false },
-    '/checkout': { ssr: false },
-    '/account/**': { ssr: false },
+    '/cart': { ssr: true },
+    '/checkout': { ssr: true },
+    '/account/**': { ssr: true },
     // 关键：为 Vercel 图片优化添加路由规则
     '/_vercel/image/**': {
       swr: 86400, // 缓存24小时
