@@ -7,13 +7,25 @@ export default defineNuxtConfig({
   modules: ["@vueuse/nuxt", "@nuxt/ui", "@nuxt/image", "notivue/nuxt", "@nuxtjs/i18n", "@nuxthub/core"],
 
     image: {
-    provider: 'vercel', 
+    provider: 'vercel',
+    // 使用 domains 替代 remotePatterns（某些版本兼容性更好）
+    domains: ['www.toppuer.top'],
+    // 保留 remotePatterns 作为补充
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'www.toppuer.top',  // 替换成你的图片域
+        hostname: 'www.toppuer.top',
       },
     ],
+    // 屏幕断点配置（优化不同设备加载）
+    screens: {
+      xs: 320,
+      sm: 640,
+      md: 768,
+      lg: 1024,
+      xl: 1280,
+      xxl: 1536,
+    },
   },
 
   
@@ -51,28 +63,37 @@ export default defineNuxtConfig({
   },
 
   routeRules: {
-   // 1. 静态首页：在构建时预渲染，速度最快
-    '/': { prerender: true },
-
-    // 2. 产品详情页：使用 ISR (增量静态再生)
-    //    首次访问时生成HTML，之后1小时内直接提供缓存，1小时后后台更新[citation:4][citation:8]
-    '/product/**': { isr: 3600 }, // 单位：秒
-
-    // 3. 分类页面：使用 SWR (Stale-While-Revalidate)
-    //    立即返回缓存（可能旧的），同时在后台更新新数据[citation:1][citation:4]
+  '/': { prerender: true },
+    '/product/**': { isr: 3600 },
     '/categories': { swr: 3600 },
     '/favorites': { swr: 3600 },
-
-    // 4. 动态和个性化页面：完全在客户端渲染，不进行服务端缓存
     '/cart': { ssr: false },
     '/checkout': { ssr: false },
     '/account/**': { ssr: false },
-    // 你可以根据项目实际路由添加更多规则
+    // 关键：为 Vercel 图片优化添加路由规则
+    '/_vercel/image/**': {
+      swr: 86400, // 缓存24小时
+    },
   },
 
   nitro: {
-    // preset: "cloudflare_pages",
-    prerender: { routes: ["/sitemap.xml", "/robots.txt"] },
+     // 关键：为 Vercel 环境添加图片优化的特定配置
+    vercel: {
+      // 允许外部图片优化
+      external: true,
+    },
+    prerender: { 
+      routes: ["/sitemap.xml", "/robots.txt"] 
+    },
+    // 确保图片请求不被缓存策略意外覆盖
+    routeRules: {
+      '/_vercel/image/**': {
+        swr: 86400,
+        headers: {
+          'Cache-Control': 'public, max-age=86400, stale-while-revalidate=604800',
+        },
+      },
+    },
   },
 
 
