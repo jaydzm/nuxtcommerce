@@ -110,25 +110,24 @@ defineExpose({
           <div
             v-for="n in 12"
             :key="'skeleton-' + n"
-            class="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden animate-pulse"
+            class="group select-none"
           >
-            <!-- 图片占位 - 4:3 比例 -->
-            <div class="relative w-full pt-[75%] bg-gray-200 dark:bg-gray-700">
-              <div class="absolute inset-0"></div>
-            </div>
-            <!-- 内容占位 -->
-            <div class="p-4 space-y-3">
-              <!-- 标题 -->
-              <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
-              <!-- 描述 -->
-              <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
-              <!-- 底部：价格和统计 -->
-              <div class="flex justify-between items-center pt-2">
-                <div class="h-5 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
-                <div class="flex gap-3">
-                  <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-6"></div>
-                  <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-6"></div>
-                </div>
+            <div class="cursor-pointer transition ease-[ease] duration-300">
+              <!-- 
+                图片占位 - 使用与 ProductCard 完全一致的 3:4 比例
+                pb-[133%] 对应 padding-bottom: 133%，即宽:高 = 3:4
+              -->
+              <div class="relative pb-[133%] rounded-2xl overflow-hidden dark:shadow-[0_8px_24px_rgba(0,0,0,.5)] animate-pulse">
+                <div class="absolute h-full w-full dark:bg-neutral-800 bg-neutral-200"></div>
+              </div>
+              <!-- 内容占位 - 与 ProductCard 结构一致 -->
+              <div class="grid gap-0.5 pt-3 pb-4 px-1.5">
+                <!-- 价格占位 -->
+                <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
+                <!-- 标题占位 -->
+                <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+                <!-- 样式名称占位 -->
+                <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
               </div>
             </div>
           </div>
@@ -168,12 +167,11 @@ defineExpose({
 </template>
 
 <style scoped>
-/* 保留容器样式，其他全部使用 Tailwind */
 .container {
   max-width: 1400px;
 }
 
-/* 自定义滚动条（可选，与 Pinterest 风格匹配） */
+/* 美化滚动条 - Pinterest 风格 */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
