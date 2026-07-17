@@ -81,7 +81,7 @@ defineExpose({
 </script>
 
 <template>
-  <div class="container mx-auto px-4 py-6">
+  <div class="container mx-auto">
     <!-- 错误状态 -->
     <div v-if="error" class="text-center py-12">
       <p class="text-red-500 dark:text-red-400">加载失败: {{ error.message }}</p>
