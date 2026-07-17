@@ -81,330 +81,130 @@ defineExpose({
 </script>
 
 <template>
-  <div class="product-list-container">
+  <div class="container mx-auto px-4 py-6">
     <!-- 错误状态 -->
-    <div v-if="error" class="error-state">
-      <p class="text-red-500">加载失败: {{ error.message }}</p>
-      <button @click="resetAndFetch" class="retry-btn">重试</button>
+    <div v-if="error" class="text-center py-12">
+      <p class="text-red-500 dark:text-red-400">加载失败: {{ error.message }}</p>
+      <button 
+        @click="resetAndFetch" 
+        class="mt-4 px-6 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors"
+      >
+        重试
+      </button>
     </div>
 
     <!-- 产品网格 -->
-    <div 
-      v-if="!error"
-      class="product-grid"
-    >
-      <!-- 实际产品卡片 -->
-      <ProductCard 
-        v-for="product in products" 
-        :key="product.sku || product.id" 
-        :products="[product]" 
-      />
-      
-      <!-- 骨架屏占位（首次加载） -->
-      <template v-if="loading && products.length === 0">
-        <div
-          v-for="n in 12"
-          :key="'skeleton-' + n"
-          class="product-card skeleton-card"
-        >
-          <div class="skeleton-image-wrapper">
-            <div class="skeleton-image"></div>
-          </div>
-          <div class="skeleton-content">
-            <div class="skeleton-title"></div>
-            <div class="skeleton-desc"></div>
-            <div class="skeleton-footer">
-              <div class="skeleton-price"></div>
-              <div class="skeleton-stats"></div>
+    <div v-else>
+      <div 
+        class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 md:gap-6"
+      >
+        <!-- 实际产品卡片 -->
+        <ProductCard 
+          v-for="product in products" 
+          :key="product.sku || product.id" 
+          :products="[product]" 
+        />
+        
+        <!-- 骨架屏占位（首次加载） -->
+        <template v-if="loading && products.length === 0">
+          <div
+            v-for="n in 12"
+            :key="'skeleton-' + n"
+            class="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden animate-pulse"
+          >
+            <!-- 图片占位 - 4:3 比例 -->
+            <div class="relative w-full pt-[75%] bg-gray-200 dark:bg-gray-700">
+              <div class="absolute inset-0"></div>
+            </div>
+            <!-- 内容占位 -->
+            <div class="p-4 space-y-3">
+              <!-- 标题 -->
+              <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+              <!-- 描述 -->
+              <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+              <!-- 底部：价格和统计 -->
+              <div class="flex justify-between items-center pt-2">
+                <div class="h-5 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
+                <div class="flex gap-3">
+                  <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-6"></div>
+                  <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-6"></div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </template>
-    </div>
-
-    <!-- 加载更多触发器 -->
-    <div 
-      ref="loadMoreTrigger" 
-      class="load-more-trigger"
-      :class="{ 'has-more': pageInfo.hasNextPage }"
-    >
-      <!-- 加载更多时的加载指示器 -->
-      <div v-if="loading && products.length > 0" class="loading-indicator">
-        <div class="spinner"></div>
-        <span class="text-sm text-gray-400">加载更多...</span>
+        </template>
       </div>
-      
-      <!-- 已加载全部 -->
-      <span 
-        v-else-if="!pageInfo.hasNextPage && products.length > 0" 
-        class="text-sm text-gray-400"
+
+      <!-- 加载更多触发器 -->
+      <div 
+        ref="loadMoreTrigger" 
+        class="flex justify-center items-center py-8 min-h-[60px]"
+        :class="{ 'min-h-[80px]': pageInfo.hasNextPage }"
       >
-        — 已加载全部产品 —
-      </span>
-      
-      <!-- 空状态 -->
-      <span 
-        v-else-if="!loading && products.length === 0" 
-        class="text-gray-400"
-      >
-        暂无产品
-      </span>
+        <!-- 加载更多时的加载指示器 -->
+        <div v-if="loading && products.length > 0" class="flex flex-col items-center gap-2">
+          <div class="w-6 h-6 border-2 border-gray-300 dark:border-gray-600 border-t-primary-600 dark:border-t-primary-400 rounded-full animate-spin"></div>
+          <span class="text-sm text-gray-400 dark:text-gray-500">加载更多...</span>
+        </div>
+        
+        <!-- 已加载全部 -->
+        <span 
+          v-else-if="!pageInfo.hasNextPage && products.length > 0" 
+          class="text-sm text-gray-400 dark:text-gray-500"
+        >
+          — 已加载全部产品 —
+        </span>
+        
+        <!-- 空状态 -->
+        <span 
+          v-else-if="!loading && products.length === 0" 
+          class="text-gray-400 dark:text-gray-500"
+        >
+          暂无产品
+        </span>
+      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.product-list-container {
-  padding: 20px 0;
+/* 保留容器样式，其他全部使用 Tailwind */
+.container {
   max-width: 1400px;
-  margin: 0 auto;
 }
 
-/* ===== 错误状态 ===== */
-.error-state {
-  text-align: center;
-  padding: 40px 20px;
+/* 自定义滚动条（可选，与 Pinterest 风格匹配） */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
 }
 
-.retry-btn {
-  margin-top: 12px;
-  padding: 8px 24px;
-  background: #409eff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-.retry-btn:hover {
-  background: #66b1ff;
-}
-
-/* ===== 产品网格 ===== */
-.product-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 20px;
-  min-height: 400px;
-}
-
-/* ===== 产品卡片 ===== */
-.product-card {
-  background: #fff;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-  transition: transform 0.3s, box-shadow 0.3s;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-}
-
-.product-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
-}
-
-/* ===== 图片容器 ===== */
-.product-image-wrapper,
-.skeleton-image-wrapper {
-  position: relative;
-  width: 100%;
-  padding-top: 75%; /* 4:3 比例，适应更多商品图片 */
-  background: #f5f7fa;
-  overflow: hidden;
-  flex-shrink: 0;
-}
-
-/* ===== 实际产品图片 ===== */
-.product-image-wrapper img {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-/* ===== 骨架屏图片 ===== */
-.skeleton-image {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-  background-size: 200% 100%;
-  animation: skeleton-loading 1.5s infinite;
-}
-
-/* ===== 骨架屏内容 ===== */
-.skeleton-content {
-  padding: 12px 16px;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.skeleton-content .skeleton-title {
-  height: 20px;
-  background: #f0f0f0;
-  border-radius: 4px;
-  width: 80%;
-}
-
-.skeleton-content .skeleton-desc {
-  height: 14px;
-  background: #f0f0f0;
-  border-radius: 4px;
-  width: 100%;
-}
-
-.skeleton-content .skeleton-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 4px;
-}
-
-.skeleton-content .skeleton-price {
-  height: 24px;
-  width: 40%;
-  background: #f0f0f0;
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
   border-radius: 4px;
 }
 
-.skeleton-content .skeleton-stats {
-  height: 16px;
-  width: 30%;
-  background: #f0f0f0;
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
   border-radius: 4px;
 }
 
-/* ===== 加载动画 ===== */
-@keyframes skeleton-loading {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
 }
 
-/* ===== 加载更多触发器 ===== */
-.load-more-trigger {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 32px 0;
-  min-height: 60px;
-}
-
-.load-more-trigger.has-more {
-  min-height: 80px;
-}
-
-.loading-indicator {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-
-.spinner {
-  width: 24px;
-  height: 24px;
-  border: 3px solid #f0f0f0;
-  border-top-color: #409eff;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* ===== 响应式 ===== */
-@media (max-width: 640px) {
-  .product-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-  }
-  
-  .skeleton-content {
-    padding: 8px 12px;
-  }
-  
-  .skeleton-content .skeleton-title {
-    height: 16px;
-  }
-  
-  .skeleton-content .skeleton-desc {
-    height: 12px;
-  }
-  
-  .skeleton-content .skeleton-price {
-    height: 20px;
-  }
-}
-
-@media (min-width: 641px) and (max-width: 768px) {
-  .product-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-  }
-}
-
-@media (min-width: 769px) and (max-width: 1024px) {
-  .product-grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
-}
-
-@media (min-width: 1025px) {
-  .product-grid {
-    grid-template-columns: repeat(5, 1fr);
-  }
-}
-
-@media (min-width: 1280px) {
-  .product-grid {
-    grid-template-columns: repeat(6, 1fr);
-  }
-}
-
-@media (min-width: 1536px) {
-  .product-grid {
-    grid-template-columns: repeat(7, 1fr);
-  }
-}
-
-/* ===== 暗色模式支持 ===== */
+/* 暗色模式滚动条 */
 @media (prefers-color-scheme: dark) {
-  .product-card {
-    background: #1a1a1a;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+  ::-webkit-scrollbar-track {
+    background: #2d2d2d;
   }
   
-  .product-image-wrapper,
-  .skeleton-image-wrapper {
-    background: #2a2a2a;
+  ::-webkit-scrollbar-thumb {
+    background: #555;
   }
   
-  .skeleton-image,
-  .skeleton-content .skeleton-title,
-  .skeleton-content .skeleton-desc,
-  .skeleton-content .skeleton-price,
-  .skeleton-content .skeleton-stats {
-    background: #2a2a2a;
-  }
-  
-  .skeleton-image {
-    background: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
+  ::-webkit-scrollbar-thumb:hover {
+    background: #666;
   }
 }
 </style>
