@@ -21,14 +21,10 @@ const loadMoreTrigger = ref(null);
 // ============ 随机种子管理 ============
 const SEED_KEY = 'product_seed';
 
-// 获取或生成种子
+// 获取种子 - 改为每次都生成新的
 const getSeed = () => {
-  let seed = localStorage.getItem(SEED_KEY);
-  if (!seed) {
-    seed = String(Math.floor(Math.random() * 99999) + 1);
-    localStorage.setItem(SEED_KEY, seed);
-  }
-  return parseInt(seed);
+  // 不再从 localStorage 读取，每次都生成新的随机数
+  return Math.floor(Math.random() * 99999) + 1;
 };
 
 // 可种子化的随机打乱
@@ -93,9 +89,6 @@ const resetAndFetch = async () => {
 
 // ============ 监听分类变化 ============
 watch(() => props.categorySlug, () => {
-  // 分类变化时重置种子
-  const newSeed = String(Math.floor(Math.random() * 99999) + 1);
-  localStorage.setItem(SEED_KEY, newSeed);
   resetAndFetch();
 });
 
@@ -160,6 +153,7 @@ defineExpose({
               </div>
               <div class="grid gap-0.5 pt-3 pb-4 px-1.5">
                 <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
+div>
                 <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
                 <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
               </div>
