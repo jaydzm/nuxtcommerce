@@ -1,7 +1,6 @@
-<!-- app/components/ProductList.vue -->
 <script setup>
 import { useInfiniteScroll } from '@vueuse/core';
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
 
 // Props
 const props = defineProps({
@@ -12,60 +11,75 @@ const props = defineProps({
 });
 
 // 状态
-const products = ref([]);
-const pageInfo = ref({ hasNextPage: false, endCursor: '' });
+const allProducts = ref([]); // 存储所有已加载的产品
 const loading = ref(false);
 const error = ref(null);
 const loadMoreTrigger = ref(null);
+const hasMore = ref(true);
+const currentPage = ref(1);
+const totalPages = ref(0);
 
-// ============ 随机种子管理 ============
+// ============ 随机种子 ============
 const RANDOM_SEED_KEY = 'product_random_seed';
 
-// 获取或生成随机种子
 const getRandomSeed = () => {
   let seed = localStorage.getItem(RANDOM_SEED_KEY);
-  
   if (!seed) {
-    // 生成 1-99999 之间的随机数
     seed = String(Math.floor(Math.random() * 99999) + 1);
     localStorage.setItem(RANDOM_SEED_KEY, seed);
   }
-  
-  return seed;
+  return parseInt(seed);
 };
 
-// 重置随机种子（用户主动刷新随机顺序时调用）
-const resetRandomSeed = () => {
-  localStorage.removeItem(RANDOM_SEED_KEY);
-  const newSeed = String(Math.floor(Math.random() * 99999) + 1);
-  localStorage.setItem(RANDOM_SEED_KEY, newSeed);
-  return newSeed;
+// 使用种子打乱数组（可复现的随机）
+const shuffleWithSeed = (array, seed) => {
+  const shuffled = [...array];
+  let m = shuffled.length;
+  let t, i;
+  
+  // 使用种子初始化伪随机数生成器
+  let s = seed;
+  const nextRandom = () => {
+    s = (s * 9301 + 49297) % 233280;
+    return s / 233280;
+  };
+  
+  while (m) {
+    i = Math.floor(nextRandom() * m--);
+    t = shuffled[m];
+    shuffled[m] = shuffled[i];
+    shuffled[i] = t;
+  }
+  
+  return shuffled;
 };
 
 // ============ 加载函数 ============
-const fetchProducts = async (after = null) => {
+const fetchProducts = async (page = 1) => {
   if (loading.value) return;
   loading.value = true;
   error.value = null;
 
   try {
     const query = new URLSearchParams();
+    query.append('page', page);
+    query.append('per_page', 30); // 一次多加载一些
     
-    // 添加随机种子（关键！）
-    const seed = getRandomSeed();
-    query.append('seed', seed);
-    
-    if (after) query.append('after', after);
-    if (props.categorySlug) query.append('category', props.categorySlug);
+    if (props.categorySlug) {
+      query.append('category', props.categorySlug);
+    }
     
     const data = await $fetch(`/api/products?${query.toString()}`);
     
-    if (after) {
-      products.value = [...products.value, ...data.products.nodes];
-    } else {
-      products.value = data.products.nodes;
-    }
-    pageInfo.value = data.products.pageInfo;
+    // 获取所有产品
+    const newProducts = data.products?.nodes || data.products || [];
+    totalPages.value = data.products?.pageInfo?.totalPages || 0;
+    
+    // 存储所有产品
+    allProducts.value = [...allProducts.value, ...newProducts];
+    hasMore.value = page < totalPages.value;
+    currentPage.value = page;
+    
   } catch (err) {
     error.value = err;
     console.error('加载产品失败:', err);
@@ -74,48 +88,58 @@ const fetchProducts = async (after = null) => {
   }
 };
 
-// 重置并重新加载（当分类变化时）
+// ============ 计算打乱后的产品列表 ============
+const products = computed(() => {
+  const seed = getRandomSeed();
+  return shuffleWithSeed(allProducts.value, seed);
+});
+
+// ============ 重置 ============
 const resetAndFetch = async () => {
-  products.value = [];
-  pageInfo.value = { hasNextPage: false, endCursor: '' };
-  await fetchProducts();
+  allProducts.value = [];
+  currentPage.value = 1;
+  hasMore.value = true;
+  await fetchProducts(1);
 };
 
-// 监听分类变化 - 切换分类时重置种子，保证新分类有全新的随机顺序
+// ============ 加载更多 ============
+const loadMore = async () => {
+  if (!hasMore.value || loading.value) return;
+  await fetchProducts(currentPage.value + 1);
+};
+
+// 监听分类变化
 watch(() => props.categorySlug, () => {
-  // 分类变化时重置种子（让每个分类独立随机）
-  resetRandomSeed();
+  // 分类变化时重置种子
+  localStorage.removeItem(RANDOM_SEED_KEY);
   resetAndFetch();
 });
 
-// ============ 无限滚动 ============
+// 无限滚动
 useInfiniteScroll(
   loadMoreTrigger,
-  async () => {
-    if (pageInfo.value.hasNextPage && !loading.value) {
-      await fetchProducts(pageInfo.value.endCursor);
-    }
-  },
+  loadMore,
   { distance: 100 }
 );
 
-// ============ 首次加载 ============
+// 首次加载
 onMounted(() => {
-  fetchProducts();
+  fetchProducts(1);
 });
 
-// ============ 暴露方法给父组件 ============
+// 暴露方法
 defineExpose({
   resetAndFetch,
-  fetchProducts,
-  resetRandomSeed, // 暴露重置种子方法，让用户可手动刷新排序
-  getCurrentSeed: getRandomSeed // 获取当前使用的种子
+  getCurrentSeed: getRandomSeed,
+  resetRandomSeed: () => {
+    localStorage.removeItem(RANDOM_SEED_KEY);
+  }
 });
 </script>
 
 <template>
+  <!-- 模板保持不变，但使用 products computed -->
   <div class="container mx-auto">
-    <!-- 错误状态 -->
     <div v-if="error" class="text-center py-12">
       <p class="text-red-500 dark:text-red-400">加载失败: {{ error.message }}</p>
       <button 
@@ -126,12 +150,10 @@ defineExpose({
       </button>
     </div>
 
-    <!-- 产品网格 -->
     <div v-else>
-      <!-- 可选的"换一批"按钮 -->
-      <div v-if="products.length > 0" class="flex justify-end mb-4">
+      <div v-if="allProducts.length > 0" class="flex justify-end mb-4">
         <button 
-          @click="() => { resetRandomSeed(); resetAndFetch(); }"
+          @click="() => { localStorage.removeItem(RANDOM_SEED_KEY); resetAndFetch(); }"
           class="px-4 py-2 text-sm bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
         >
           🔀 换一批
@@ -141,20 +163,15 @@ defineExpose({
       <div 
         class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 md:gap-6"
       >
-        <!-- 实际产品卡片 -->
         <ProductCard 
           v-for="product in products" 
           :key="product.sku || product.id" 
           :products="[product]" 
         />
         
-        <!-- 骨架屏占位（首次加载） -->
-        <template v-if="loading && products.length === 0">
-          <div
-            v-for="n in 12"
-            :key="'skeleton-' + n"
-            class="group select-none"
-          >
+        <!-- 骨架屏 -->
+        <template v-if="loading && allProducts.length === 0">
+          <div v-for="n in 12" :key="'skeleton-' + n" class="group select-none">
             <div class="cursor-pointer transition ease-[ease] duration-300">
               <div class="relative pb-[133%] rounded-2xl overflow-hidden dark:shadow-[0_8px_24px_rgba(0,0,0,.5)] animate-pulse">
                 <div class="absolute h-full w-full dark:bg-neutral-800 bg-neutral-200"></div>
@@ -169,29 +186,26 @@ defineExpose({
         </template>
       </div>
 
-      <!-- 加载更多触发器 -->
+      <!-- 加载更多 -->
       <div 
         ref="loadMoreTrigger" 
         class="flex justify-center items-center py-8 min-h-[60px]"
-        :class="{ 'min-h-[80px]': pageInfo.hasNextPage }"
+        :class="{ 'min-h-[80px]': hasMore }"
       >
-        <!-- 加载更多时的加载指示器 -->
-        <div v-if="loading && products.length > 0" class="flex flex-col items-center gap-2">
+        <div v-if="loading && allProducts.length > 0" class="flex flex-col items-center gap-2">
           <div class="w-6 h-6 border-2 border-gray-300 dark:border-gray-600 border-t-primary-600 dark:border-t-primary-400 rounded-full animate-spin"></div>
           <span class="text-sm text-gray-400 dark:text-gray-500">加载更多...</span>
         </div>
         
-        <!-- 已加载全部 -->
         <span 
-          v-else-if="!pageInfo.hasNextPage && products.length > 0" 
+          v-else-if="!hasMore && allProducts.length > 0" 
           class="text-sm text-gray-400 dark:text-gray-500"
         >
           — 已加载全部产品 —
         </span>
         
-        <!-- 空状态 -->
         <span 
-          v-else-if="!loading && products.length === 0" 
+          v-else-if="!loading && allProducts.length === 0" 
           class="text-gray-400 dark:text-gray-500"
         >
           口感快车高端茶样
@@ -200,44 +214,3 @@ defineExpose({
     </div>
   </div>
 </template>
-
-<style scoped>
-.container {
-  max-width: 1400px;
-}
-
-/* 美化滚动条 - Pinterest 风格 */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
-}
-
-/* 暗色模式滚动条 */
-@media (prefers-color-scheme: dark) {
-  ::-webkit-scrollbar-track {
-    background: #2d2d2d;
-  }
-  
-  ::-webkit-scrollbar-thumb {
-    background: #555;
-  }
-  
-  ::-webkit-scrollbar-thumb:hover {
-    background: #666;
-  }
-}
-</style>
