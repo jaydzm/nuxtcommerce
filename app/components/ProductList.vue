@@ -18,7 +18,31 @@ const loading = ref(false);
 const error = ref(null);
 const loadMoreTrigger = ref(null);
 
-// 加载函数
+// ============ 随机种子管理 ============
+const RANDOM_SEED_KEY = 'product_random_seed';
+
+// 获取或生成随机种子
+const getRandomSeed = () => {
+  let seed = localStorage.getItem(RANDOM_SEED_KEY);
+  
+  if (!seed) {
+    // 生成 1-99999 之间的随机数
+    seed = String(Math.floor(Math.random() * 99999) + 1);
+    localStorage.setItem(RANDOM_SEED_KEY, seed);
+  }
+  
+  return seed;
+};
+
+// 重置随机种子（用户主动刷新随机顺序时调用）
+const resetRandomSeed = () => {
+  localStorage.removeItem(RANDOM_SEED_KEY);
+  const newSeed = String(Math.floor(Math.random() * 99999) + 1);
+  localStorage.setItem(RANDOM_SEED_KEY, newSeed);
+  return newSeed;
+};
+
+// ============ 加载函数 ============
 const fetchProducts = async (after = null) => {
   if (loading.value) return;
   loading.value = true;
@@ -26,6 +50,11 @@ const fetchProducts = async (after = null) => {
 
   try {
     const query = new URLSearchParams();
+    
+    // 添加随机种子（关键！）
+    const seed = getRandomSeed();
+    query.append('seed', seed);
+    
     if (after) query.append('after', after);
     if (props.categorySlug) query.append('category', props.categorySlug);
     
@@ -52,12 +81,14 @@ const resetAndFetch = async () => {
   await fetchProducts();
 };
 
-// 监听分类变化
+// 监听分类变化 - 切换分类时重置种子，保证新分类有全新的随机顺序
 watch(() => props.categorySlug, () => {
+  // 分类变化时重置种子（让每个分类独立随机）
+  resetRandomSeed();
   resetAndFetch();
 });
 
-// 无限滚动
+// ============ 无限滚动 ============
 useInfiniteScroll(
   loadMoreTrigger,
   async () => {
@@ -68,15 +99,17 @@ useInfiniteScroll(
   { distance: 100 }
 );
 
-// 首次加载
+// ============ 首次加载 ============
 onMounted(() => {
   fetchProducts();
 });
 
-// 暴露方法给父组件
+// ============ 暴露方法给父组件 ============
 defineExpose({
   resetAndFetch,
-  fetchProducts
+  fetchProducts,
+  resetRandomSeed, // 暴露重置种子方法，让用户可手动刷新排序
+  getCurrentSeed: getRandomSeed // 获取当前使用的种子
 });
 </script>
 
@@ -95,6 +128,16 @@ defineExpose({
 
     <!-- 产品网格 -->
     <div v-else>
+      <!-- 可选的"换一批"按钮 -->
+      <div v-if="products.length > 0" class="flex justify-end mb-4">
+        <button 
+          @click="() => { resetRandomSeed(); resetAndFetch(); }"
+          class="px-4 py-2 text-sm bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
+        >
+          🔀 换一批
+        </button>
+      </div>
+
       <div 
         class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 md:gap-6"
       >
@@ -113,20 +156,12 @@ defineExpose({
             class="group select-none"
           >
             <div class="cursor-pointer transition ease-[ease] duration-300">
-              <!-- 
-                图片占位 - 使用与 ProductCard 完全一致的 3:4 比例
-                pb-[133%] 对应 padding-bottom: 133%，即宽:高 = 3:4
-              -->
               <div class="relative pb-[133%] rounded-2xl overflow-hidden dark:shadow-[0_8px_24px_rgba(0,0,0,.5)] animate-pulse">
                 <div class="absolute h-full w-full dark:bg-neutral-800 bg-neutral-200"></div>
               </div>
-              <!-- 内容占位 - 与 ProductCard 结构一致 -->
               <div class="grid gap-0.5 pt-3 pb-4 px-1.5">
-                <!-- 价格占位 -->
                 <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
-                <!-- 标题占位 -->
                 <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
-                <!-- 样式名称占位 -->
                 <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
               </div>
             </div>
