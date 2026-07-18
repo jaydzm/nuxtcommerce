@@ -159,7 +159,7 @@ defineExpose({
           v-else-if="!loading && products.length === 0" 
           class="text-gray-400 dark:text-gray-500"
         >
-          暂无产品
+          口感快车高端茶样
         </span>
       </div>
     </div>
