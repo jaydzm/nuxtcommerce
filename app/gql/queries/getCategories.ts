@@ -3,7 +3,7 @@ import { gql } from 'graphql-request';
 
 export const getCategoriesQuery = gql`
   query getCategories {
-    productCategories(first: 100, where: { orderby: COUNT, order: DESC }) {
+    productCategories(first: 5, where: { orderby: COUNT, order: DESC }) {
       nodes {
         id
         name
