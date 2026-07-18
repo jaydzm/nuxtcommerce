@@ -1,7 +1,7 @@
 <!-- app/components/ProductList.vue -->
 <script setup>
 import { useInfiniteScroll } from '@vueuse/core';
-import { ref, onMounted, watch, computed } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 
 // Props
 const props = defineProps({
@@ -12,53 +12,13 @@ const props = defineProps({
 });
 
 // 状态
-const productPages = ref([]);
+const products = ref([]);
 const pageInfo = ref({ hasNextPage: false, endCursor: '' });
 const loading = ref(false);
 const error = ref(null);
 const loadMoreTrigger = ref(null);
 
-// ============ 随机种子管理 ============
-// 每次调用都生成新的随机种子
-const getPageSeed = (pageIndex) => {
-  // 使用页面索引 + 当前时间戳作为种子，确保每次刷新都不同
-  const timestamp = Date.now();
-  return Math.floor((timestamp + pageIndex * 1000) % 99999) + 1;
-};
-
-// 可种子化的随机打乱
-const seededShuffle = (array, seed) => {
-  const result = [...array];
-  let m = result.length;
-  let s = seed;
-  
-  const nextRand = () => {
-    s = (s * 9301 + 49297) % 233280;
-    return s / 233280;
-  };
-  
-  while (m > 0) {
-    const i = Math.floor(nextRand() * m);
-    m--;
-    [result[m], result[i]] = [result[i], result[m]];
-  }
-  
-  return result;
-};
-
-// ============ 计算属性：合并所有页面并打乱 ============
-const products = computed(() => {
-  // 对每一页独立打乱
-  const shuffledPages = productPages.value.map((page, index) => {
-    const seed = getPageSeed(index);
-    return seededShuffle(page, seed);
-  });
-  
-  // 合并所有页面
-  return shuffledPages.flat();
-});
-
-// ============ 加载函数 ============
+// 加载函数
 const fetchProducts = async (after = null) => {
   if (loading.value) return;
   loading.value = true;
@@ -71,12 +31,10 @@ const fetchProducts = async (after = null) => {
     
     const data = await $fetch(`/api/products?${query.toString()}`);
     
-    const newProducts = data.products.nodes || [];
-    
     if (after) {
-      productPages.value = [...productPages.value, newProducts];
+      products.value = [...products.value, ...data.products.nodes];
     } else {
-      productPages.value = [newProducts];
+      products.value = data.products.nodes;
     }
     pageInfo.value = data.products.pageInfo;
   } catch (err) {
@@ -87,19 +45,19 @@ const fetchProducts = async (after = null) => {
   }
 };
 
-// ============ 重置并重新加载 ============
+// 重置并重新加载（当分类变化时）
 const resetAndFetch = async () => {
-  productPages.value = [];
+  products.value = [];
   pageInfo.value = { hasNextPage: false, endCursor: '' };
   await fetchProducts();
 };
 
-// ============ 监听分类变化 ============
+// 监听分类变化
 watch(() => props.categorySlug, () => {
   resetAndFetch();
 });
 
-// ============ 无限滚动 ============
+// 无限滚动
 useInfiniteScroll(
   loadMoreTrigger,
   async () => {
@@ -110,12 +68,12 @@ useInfiniteScroll(
   { distance: 100 }
 );
 
-// ============ 首次加载 ============
+// 首次加载
 onMounted(() => {
   fetchProducts();
 });
 
-// ============ 暴露方法给父组件 ============
+// 暴露方法给父组件
 defineExpose({
   resetAndFetch,
   fetchProducts
@@ -148,19 +106,27 @@ defineExpose({
         />
         
         <!-- 骨架屏占位（首次加载） -->
-        <template v-if="loading && productPages.length === 0">
+        <template v-if="loading && products.length === 0">
           <div
             v-for="n in 12"
             :key="'skeleton-' + n"
             class="group select-none"
           >
             <div class="cursor-pointer transition ease-[ease] duration-300">
+              <!-- 
+                图片占位 - 使用与 ProductCard 完全一致的 3:4 比例
+                pb-[133%] 对应 padding-bottom: 133%，即宽:高 = 3:4
+              -->
               <div class="relative pb-[133%] rounded-2xl overflow-hidden dark:shadow-[0_8px_24px_rgba(0,0,0,.5)] animate-pulse">
                 <div class="absolute h-full w-full dark:bg-neutral-800 bg-neutral-200"></div>
               </div>
+              <!-- 内容占位 - 与 ProductCard 结构一致 -->
               <div class="grid gap-0.5 pt-3 pb-4 px-1.5">
+                <!-- 价格占位 -->
                 <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
+                <!-- 标题占位 -->
                 <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+                <!-- 样式名称占位 -->
                 <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
               </div>
             </div>
@@ -175,22 +141,22 @@ defineExpose({
         :class="{ 'min-h-[80px]': pageInfo.hasNextPage }"
       >
         <!-- 加载更多时的加载指示器 -->
-        <div v-if="loading && productPages.length > 0" class="flex flex-col items-center gap-2">
+        <div v-if="loading && products.length > 0" class="flex flex-col items-center gap-2">
           <div class="w-6 h-6 border-2 border-gray-300 dark:border-gray-600 border-t-primary-600 dark:border-t-primary-400 rounded-full animate-spin"></div>
           <span class="text-sm text-gray-400 dark:text-gray-500">加载更多...</span>
         </div>
         
         <!-- 已加载全部 -->
         <span 
-          v-else-if="!pageInfo.hasNextPage && productPages.length > 0" 
+          v-else-if="!pageInfo.hasNextPage && products.length > 0" 
           class="text-sm text-gray-400 dark:text-gray-500"
         >
-          — 已加载全部产品 ({{ productPages.reduce((acc, page) => acc + page.length, 0) }}件) —
+          — 已加载全部产品 —
         </span>
         
         <!-- 空状态 -->
         <span 
-          v-else-if="!loading && productPages.length === 0" 
+          v-else-if="!loading && products.length === 0" 
           class="text-gray-400 dark:text-gray-500"
         >
           口感快车高端茶样
