@@ -12,22 +12,18 @@ const props = defineProps({
 });
 
 // 状态
-const productPages = ref([]); // 存储每一页的数据
+const productPages = ref([]);
 const pageInfo = ref({ hasNextPage: false, endCursor: '' });
 const loading = ref(false);
 const error = ref(null);
 const loadMoreTrigger = ref(null);
 
 // ============ 随机种子管理 ============
-// 每个页面独立种子，保证已加载内容不变
+// 每次调用都生成新的随机种子
 const getPageSeed = (pageIndex) => {
-  const seedKey = `page_seed_${pageIndex}`;
-  let seed = localStorage.getItem(seedKey);
-  if (!seed) {
-    seed = String(Math.floor(Math.random() * 99999) + 1);
-    localStorage.setItem(seedKey, seed);
-  }
-  return parseInt(seed);
+  // 使用页面索引 + 当前时间戳作为种子，确保每次刷新都不同
+  const timestamp = Date.now();
+  return Math.floor((timestamp + pageIndex * 1000) % 99999) + 1;
 };
 
 // 可种子化的随机打乱
@@ -78,10 +74,8 @@ const fetchProducts = async (after = null) => {
     const newProducts = data.products.nodes || [];
     
     if (after) {
-      // 追加新页面
       productPages.value = [...productPages.value, newProducts];
     } else {
-      // 重置，只有第一页
       productPages.value = [newProducts];
     }
     pageInfo.value = data.products.pageInfo;
@@ -95,14 +89,6 @@ const fetchProducts = async (after = null) => {
 
 // ============ 重置并重新加载 ============
 const resetAndFetch = async () => {
-  // 清除所有页面种子
-  const keys = Object.keys(localStorage);
-  keys.forEach(key => {
-    if (key.startsWith('page_seed_')) {
-      localStorage.removeItem(key);
-    }
-  });
-  
   productPages.value = [];
   pageInfo.value = { hasNextPage: false, endCursor: '' };
   await fetchProducts();
