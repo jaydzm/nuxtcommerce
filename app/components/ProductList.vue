@@ -12,19 +12,22 @@ const props = defineProps({
 });
 
 // 状态
-const allProducts = ref([]);
+const productPages = ref([]); // 存储每一页的数据
 const pageInfo = ref({ hasNextPage: false, endCursor: '' });
 const loading = ref(false);
 const error = ref(null);
 const loadMoreTrigger = ref(null);
 
 // ============ 随机种子管理 ============
-const SEED_KEY = 'product_seed';
-
-// 获取种子 - 改为每次都生成新的
-const getSeed = () => {
-  // 不再从 localStorage 读取，每次都生成新的随机数
-  return Math.floor(Math.random() * 99999) + 1;
+// 每个页面独立种子，保证已加载内容不变
+const getPageSeed = (pageIndex) => {
+  const seedKey = `page_seed_${pageIndex}`;
+  let seed = localStorage.getItem(seedKey);
+  if (!seed) {
+    seed = String(Math.floor(Math.random() * 99999) + 1);
+    localStorage.setItem(seedKey, seed);
+  }
+  return parseInt(seed);
 };
 
 // 可种子化的随机打乱
@@ -47,10 +50,16 @@ const seededShuffle = (array, seed) => {
   return result;
 };
 
-// ============ 计算属性：打乱后的产品 ============
+// ============ 计算属性：合并所有页面并打乱 ============
 const products = computed(() => {
-  const seed = getSeed();
-  return seededShuffle(allProducts.value, seed);
+  // 对每一页独立打乱
+  const shuffledPages = productPages.value.map((page, index) => {
+    const seed = getPageSeed(index);
+    return seededShuffle(page, seed);
+  });
+  
+  // 合并所有页面
+  return shuffledPages.flat();
 });
 
 // ============ 加载函数 ============
@@ -66,10 +75,14 @@ const fetchProducts = async (after = null) => {
     
     const data = await $fetch(`/api/products?${query.toString()}`);
     
+    const newProducts = data.products.nodes || [];
+    
     if (after) {
-      allProducts.value = [...allProducts.value, ...data.products.nodes];
+      // 追加新页面
+      productPages.value = [...productPages.value, newProducts];
     } else {
-      allProducts.value = data.products.nodes;
+      // 重置，只有第一页
+      productPages.value = [newProducts];
     }
     pageInfo.value = data.products.pageInfo;
   } catch (err) {
@@ -82,7 +95,15 @@ const fetchProducts = async (after = null) => {
 
 // ============ 重置并重新加载 ============
 const resetAndFetch = async () => {
-  allProducts.value = [];
+  // 清除所有页面种子
+  const keys = Object.keys(localStorage);
+  keys.forEach(key => {
+    if (key.startsWith('page_seed_')) {
+      localStorage.removeItem(key);
+    }
+  });
+  
+  productPages.value = [];
   pageInfo.value = { hasNextPage: false, endCursor: '' };
   await fetchProducts();
 };
@@ -141,7 +162,7 @@ defineExpose({
         />
         
         <!-- 骨架屏占位（首次加载） -->
-        <template v-if="loading && allProducts.length === 0">
+        <template v-if="loading && productPages.length === 0">
           <div
             v-for="n in 12"
             :key="'skeleton-' + n"
@@ -153,7 +174,6 @@ defineExpose({
               </div>
               <div class="grid gap-0.5 pt-3 pb-4 px-1.5">
                 <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
-div>
                 <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
                 <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
               </div>
@@ -169,22 +189,22 @@ div>
         :class="{ 'min-h-[80px]': pageInfo.hasNextPage }"
       >
         <!-- 加载更多时的加载指示器 -->
-        <div v-if="loading && allProducts.length > 0" class="flex flex-col items-center gap-2">
+        <div v-if="loading && productPages.length > 0" class="flex flex-col items-center gap-2">
           <div class="w-6 h-6 border-2 border-gray-300 dark:border-gray-600 border-t-primary-600 dark:border-t-primary-400 rounded-full animate-spin"></div>
           <span class="text-sm text-gray-400 dark:text-gray-500">加载更多...</span>
         </div>
         
         <!-- 已加载全部 -->
         <span 
-          v-else-if="!pageInfo.hasNextPage && allProducts.length > 0" 
+          v-else-if="!pageInfo.hasNextPage && productPages.length > 0" 
           class="text-sm text-gray-400 dark:text-gray-500"
         >
-          — 已加载全部产品 —
+          — 已加载全部产品 ({{ productPages.reduce((acc, page) => acc + page.length, 0) }}件) —
         </span>
         
         <!-- 空状态 -->
         <span 
-          v-else-if="!loading && allProducts.length === 0" 
+          v-else-if="!loading && productPages.length === 0" 
           class="text-gray-400 dark:text-gray-500"
         >
           口感快车高端茶样
