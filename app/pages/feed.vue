@@ -21,34 +21,32 @@ function toggleFav(id: string) {
 // 【终极核心修复】：精准狙击你 WooCommerce 站点的真实的 images[0].url 数据结构
 function getProductImage(product: any) {
   if (!product) return ''
-  
+
   // 🎯 黄金准则：读取你后端返回的 images 数组第一张图的 url 字段
   if (product.images && product.images.length > 0) {
     return product.images[0].url || product.images[0].src || ''
   }
-  
+
   // 银色备份：兼容单数 image 对象的各种情况
   if (product.image) {
-    return product.image.url || 
-           product.image.mediaItemUrl || 
-           product.image.sourceUrl || 
-           product.image.src || 
-           ''
+    return product.image.url ||
+      product.image.mediaItemUrl ||
+      product.image.sourceUrl ||
+      product.image.src ||
+      ''
   }
-  
+
   return ''
 }
 
-// 2. 纯客户端异步加载，确保 Vercel 编译 100% 畅通
+// 2. 接口改为相对路径，规避SSR内网域名解析故障，移除useRequestURL
 async function fetchFeedData(isLoadMore = false) {
   if (isLoading.value || (!hasNextPage.value && isLoadMore)) return
   isLoading.value = true
 
   try {
-    // 自动动态获取当前域名，防止线上跨域或 SSR 路由死锁
-    const { origin } = useRequestURL()
-    
-    const data = await $fetch(`${origin}/api/products`, {
+    // 改动：直接使用相对地址，香港锐驰服务端、客户端均可正常请求
+    const data = await $fetch('/api/products', {
       query: {
         first: 5,
         after: isLoadMore ? afterCursor.value : null
@@ -65,27 +63,30 @@ async function fetchFeedData(isLoadMore = false) {
       } else {
         products.value = data.products
       }
-      
+
       afterCursor.value = data.pageInfo?.endCursor || null
       hasNextPage.value = data.pageInfo?.hasNextPage || false
     }
   } catch (error) {
-    console.error('Feed 核心接口请求失败，请检查 Vercel 环境变量 GQL_HOST:', error)
+    console.error('接口请求失败，请检查WooCommerce GraphQL接口配置：', error)
   } finally {
     isLoading.value = false
   }
 }
 
-// 3. 垂直滚动监听：一滑一屏与静默预加载下一页
+// 页面挂载自动请求商品数据（原代码缺失该逻辑）
+onMounted(() => fetchFeedData())
+
+// 3. 垂直滚动监听：改动为剩余3条预加载，规避快速滑动重复发起请求
 function onScroll(event: Event) {
   const target = event.target as HTMLElement
   const currentItemIndex = Math.round(target.scrollTop / window.innerHeight)
-  
+
   if (currentItemIndex !== activeIndex.value) {
     activeIndex.value = currentItemIndex
-    
-    // 当快滑到当前列表倒数第 2 条时，悄悄在后台拉取下一页
-    if (currentItemIndex >= products.value.length - 2 && hasNextPage.value) {
+
+    // 改动：剩余3项提前拉取分页，减少无效接口请求
+    if (currentItemIndex >= products.value.length - 3 && hasNextPage.value) {
       fetchFeedData(true)
     }
   }
@@ -97,14 +98,14 @@ const router = useRouter()
 function handleAddToCart(product: any) {
   if (product.slug) {
     // 自动适配你项目的详情页路径，如果根路径就是详情，请改为 `/${product.slug}`
-    router.push(`/product/${product.slug}`) 
+    router.push(`/product/${product.slug}`)
   }
 }
 </script>
 
 <template>
   <!-- 全屏沉浸式容器 -->
-  <div 
+  <div
     class="h-screen w-full overflow-y-scroll snap-y snap-mandatory bg-black text-white no-scrollbar select-none fixed inset-0 z-50"
     @scroll="onScroll"
   >
@@ -116,36 +117,36 @@ function handleAddToCart(product: any) {
     </NuxtLink>
 
     <!-- 商品单页滑动循环 -->
-    <div 
-      v-for="(product, index) in products" 
-      :key="product.id" 
+    <div
+      v-for="(product, index) in products"
+      :key="product.id"
       class="w-full h-screen snap-start relative flex items-center justify-center overflow-hidden"
     >
       <!-- 高级视差大图层 -->
       <div class="absolute inset-0 w-full h-full bg-gray-950 flex items-center justify-center">
-        
+
         <!-- 视觉方案 1: 背景毛玻璃，将原图放大、模糊、调暗，用来优雅填满手机两侧黑边 -->
-        <img 
+        <img
           v-if="Math.abs(index - activeIndex) <= 1 && getProductImage(product)"
-          :src="getProductImage(product)" 
+          :src="getProductImage(product)"
           class="absolute inset-0 w-full h-full object-cover scale-125 blur-2xl opacity-25 select-none pointer-events-none"
         />
 
         <!-- 视觉方案 2: 前景高保真原图，保持商品原本比例，限制高度，绝不变形拉伸 -->
-        <img 
+        <img
           v-if="Math.abs(index - activeIndex) <= 1 && getProductImage(product)"
-          :src="getProductImage(product)" 
-          :alt="product.name" 
+          :src="getProductImage(product)"
+          :alt="product.name"
           class="relative max-w-full max-h-[70vh] object-contain z-10 animate-fade-in"
         />
 
         <!-- 视觉方案 3: 兜底 UI -->
-        <div 
-          v-if="!getProductImage(product)" 
+        <div
+          v-if="!getProductImage(product)"
           class="text-gray-600 flex flex-col items-center gap-2 z-10"
         >
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-12 h-12">
-            <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V6.75Zm.375 0a.375 0 1 1-.75 0 .375 0 0 1 .75 0Z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V6.75Zm.375 0a.375 0 1 1-.75 0 .375 0 0 1 .75 0Z" />
           </svg>
           <span class="text-xs text-gray-500">图片资源正在同步...</span>
         </div>
@@ -194,7 +195,7 @@ function handleAddToCart(product: any) {
         </div>
 
         <!-- 购买按钮 -->
-        <button 
+        <button
           @click="handleAddToCart(product)"
           class="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold tracking-wide rounded-xl shadow-lg transition-colors flex items-center justify-center gap-2 active:scale-[0.99]"
         >
@@ -215,7 +216,7 @@ function handleAddToCart(product: any) {
     <!-- 全局空状态兜底 -->
     <div v-if="products.length === 0 && !isLoading" class="w-full h-screen flex flex-col items-center justify-center bg-gray-950 px-6 text-center">
       <p class="text-gray-400 mb-2">暂无推荐商品</p>
-      <p class="text-xs text-gray-600">请检查 Vercel 环境变量中 GQL_HOST 的状态</p>
+      <p class="text-xs text-gray-600">请检查WooCommerce GraphQL接口配置</p>
     </div>
   </div>
 </template>
