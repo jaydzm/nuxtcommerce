@@ -1,9 +1,21 @@
 // server/api/swipe-products.get.ts
-import { gql } from 'graphql-request';
-import { fetchWPGraphQL } from '~~/server/utils/wpgraphql';
+import { gql, GraphQLClient } from 'graphql-request';
 
 export default cachedEventHandler(async (event) => {
   const query = getQuery(event);
+  
+  // 从 runtimeConfig 获取 GraphQL 端点
+  const config = useRuntimeConfig();
+  const endpoint = config.gqlHost || process.env.GQL_HOST || '';
+  
+  if (!endpoint) {
+    throw createError({
+      statusCode: 500,
+      statusMessage: 'GQL_HOST is not configured'
+    });
+  }
+  
+  const client = new GraphQLClient(endpoint);
   
   const graphqlQuery = gql`
     query GetSwipeProducts($first: Int, $after: String, $category: String) {
@@ -52,14 +64,22 @@ export default cachedEventHandler(async (event) => {
     category: (query.category as string) || null,
   };
 
-  const data = await fetchWPGraphQL(graphqlQuery, variables);
-  
-  return {
-    products: {
-      nodes: data.products.nodes,
-      pageInfo: data.products.pageInfo
-    }
-  };
+  try {
+    const data = await client.request(graphqlQuery, variables);
+    
+    return {
+      products: {
+        nodes: data.products.nodes,
+        pageInfo: data.products.pageInfo
+      }
+    };
+  } catch (err) {
+    console.error('GraphQL Error:', err);
+    throw createError({
+      statusCode: 500,
+      statusMessage: 'Failed to fetch products'
+    });
+  }
 }, {
   swr: true,
   maxAge: 60,
