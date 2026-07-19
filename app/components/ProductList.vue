@@ -19,43 +19,26 @@ const error = ref(null);
 const loadMoreTrigger = ref(null);
 
 // ============ 随机种子管理 ============
-// 每次调用都生成新的随机种子
-const getPageSeed = (pageIndex) => {
-  // 使用页面索引 + 当前时间戳作为种子，确保每次刷新都不同
-  const timestamp = Date.now();
-  return Math.floor((timestamp + pageIndex * 1000) % 99999) + 1;
-};
+const SEED_KEY = 'woo_random_seed';
 
-// 可种子化的随机打乱
-const seededShuffle = (array, seed) => {
-  const result = [...array];
-  let m = result.length;
-  let s = seed;
-  
-  const nextRand = () => {
-    s = (s * 9301 + 49297) % 233280;
-    return s / 233280;
-  };
-  
-  while (m > 0) {
-    const i = Math.floor(nextRand() * m);
-    m--;
-    [result[m], result[i]] = [result[i], result[m]];
+// 获取或生成种子（存储在 sessionStorage，关闭页面后失效）
+const getSeed = () => {
+  let seed = sessionStorage.getItem(SEED_KEY);
+  if (!seed) {
+    seed = String(Math.floor(Math.random() * 99999) + 1);
+    sessionStorage.setItem(SEED_KEY, seed);
   }
-  
-  return result;
+  return seed;
 };
 
-// ============ 计算属性：合并所有页面并打乱 ============
+// 重置种子（分类切换时调用）
+const resetSeed = () => {
+  sessionStorage.removeItem(SEED_KEY);
+};
+
+// ============ 计算属性：合并所有页面 ============
 const products = computed(() => {
-  // 对每一页独立打乱
-  const shuffledPages = productPages.value.map((page, index) => {
-    const seed = getPageSeed(index);
-    return seededShuffle(page, seed);
-  });
-  
-  // 合并所有页面
-  return shuffledPages.flat();
+  return productPages.value.flat();
 });
 
 // ============ 加载函数 ============
@@ -68,6 +51,12 @@ const fetchProducts = async (after = null) => {
     const query = new URLSearchParams();
     if (after) query.append('after', after);
     if (props.categorySlug) query.append('category', props.categorySlug);
+    
+    // ⭐ 关键修复：传递随机种子到后端
+    const seed = getSeed();
+    query.append('seed', seed);
+    
+    console.log(`[fetchProducts] 使用种子: ${seed}, after: ${after || '首次加载'}`);
     
     const data = await $fetch(`/api/products?${query.toString()}`);
     
@@ -89,6 +78,7 @@ const fetchProducts = async (after = null) => {
 
 // ============ 重置并重新加载 ============
 const resetAndFetch = async () => {
+  resetSeed(); // 重置种子，生成新的随机顺序
   productPages.value = [];
   pageInfo.value = { hasNextPage: false, endCursor: '' };
   await fetchProducts();
@@ -118,7 +108,9 @@ onMounted(() => {
 // ============ 暴露方法给父组件 ============
 defineExpose({
   resetAndFetch,
-  fetchProducts
+  fetchProducts,
+  resetSeed,
+  getCurrentSeed: getSeed
 });
 </script>
 
