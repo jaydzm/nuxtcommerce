@@ -11,34 +11,57 @@ const props = defineProps({
   }
 });
 
-// 状态
-const productPages = ref([]);
+// ============ 状态 ============
+const allProducts = ref([]); // 存储所有已加载的产品
 const pageInfo = ref({ hasNextPage: false, endCursor: '' });
 const loading = ref(false);
 const error = ref(null);
 const loadMoreTrigger = ref(null);
 
 // ============ 随机种子管理 ============
-const SEED_KEY = 'woo_random_seed';
+const SEED_KEY = 'product_random_seed';
 
-// 获取或生成种子（存储在 sessionStorage，关闭页面后失效）
+// 获取或生成随机种子
 const getSeed = () => {
-  let seed = sessionStorage.getItem(SEED_KEY);
+  let seed = localStorage.getItem(SEED_KEY);
   if (!seed) {
     seed = String(Math.floor(Math.random() * 99999) + 1);
-    sessionStorage.setItem(SEED_KEY, seed);
+    localStorage.setItem(SEED_KEY, seed);
   }
-  return seed;
+  return parseInt(seed);
 };
 
-// 重置种子（分类切换时调用）
+// 重置种子（换一批/切换分类时调用）
 const resetSeed = () => {
-  sessionStorage.removeItem(SEED_KEY);
+  localStorage.removeItem(SEED_KEY);
 };
 
-// ============ 计算属性：合并所有页面 ============
+// ============ 可种子化的随机打乱 ============
+const seededShuffle = (array, seed) => {
+  const result = [...array];
+  let m = result.length;
+  let s = seed;
+  
+  // 线性同余生成器 (LCG)
+  const nextRand = () => {
+    s = (s * 9301 + 49297) % 233280;
+    return s / 233280;
+  };
+  
+  // Fisher-Yates 洗牌算法
+  while (m > 0) {
+    const i = Math.floor(nextRand() * m);
+    m--;
+    [result[m], result[i]] = [result[i], result[m]];
+  }
+  
+  return result;
+};
+
+// ============ 计算属性：打乱后的产品 ============
 const products = computed(() => {
-  return productPages.value.flat();
+  const seed = getSeed();
+  return seededShuffle(allProducts.value, seed);
 });
 
 // ============ 加载函数 ============
@@ -51,21 +74,17 @@ const fetchProducts = async (after = null) => {
     const query = new URLSearchParams();
     if (after) query.append('after', after);
     if (props.categorySlug) query.append('category', props.categorySlug);
-    
-    // ⭐ 关键修复：传递随机种子到后端
-    const seed = getSeed();
-    query.append('seed', seed);
-    
-    console.log(`[fetchProducts] 使用种子: ${seed}, after: ${after || '首次加载'}`);
+    // 每页加载更多产品（提高效率）
+    query.append('per_page', 30);
     
     const data = await $fetch(`/api/products?${query.toString()}`);
     
     const newProducts = data.products.nodes || [];
     
     if (after) {
-      productPages.value = [...productPages.value, newProducts];
+      allProducts.value = [...allProducts.value, ...newProducts];
     } else {
-      productPages.value = [newProducts];
+      allProducts.value = newProducts;
     }
     pageInfo.value = data.products.pageInfo;
   } catch (err) {
@@ -78,8 +97,8 @@ const fetchProducts = async (after = null) => {
 
 // ============ 重置并重新加载 ============
 const resetAndFetch = async () => {
-  resetSeed(); // 重置种子，生成新的随机顺序
-  productPages.value = [];
+  resetSeed(); // 重置种子，生成新随机顺序
+  allProducts.value = [];
   pageInfo.value = { hasNextPage: false, endCursor: '' };
   await fetchProducts();
 };
@@ -129,6 +148,13 @@ defineExpose({
 
     <!-- 产品网格 -->
     <div v-else>
+      <!-- 显示随机种子（可选，方便调试） -->
+      <div v-if="allProducts.length > 0" class="flex justify-end mb-4">
+        <span class="text-xs text-gray-400 dark:text-gray-500">
+          随机种子: {{ getSeed() }}
+        </span>
+      </div>
+
       <div 
         class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 md:gap-6"
       >
@@ -140,7 +166,7 @@ defineExpose({
         />
         
         <!-- 骨架屏占位（首次加载） -->
-        <template v-if="loading && productPages.length === 0">
+        <template v-if="loading && allProducts.length === 0">
           <div
             v-for="n in 12"
             :key="'skeleton-' + n"
@@ -167,25 +193,25 @@ defineExpose({
         :class="{ 'min-h-[80px]': pageInfo.hasNextPage }"
       >
         <!-- 加载更多时的加载指示器 -->
-        <div v-if="loading && productPages.length > 0" class="flex flex-col items-center gap-2">
+        <div v-if="loading && allProducts.length > 0" class="flex flex-col items-center gap-2">
           <div class="w-6 h-6 border-2 border-gray-300 dark:border-gray-600 border-t-primary-600 dark:border-t-primary-400 rounded-full animate-spin"></div>
           <span class="text-sm text-gray-400 dark:text-gray-500">加载更多...</span>
         </div>
         
         <!-- 已加载全部 -->
         <span 
-          v-else-if="!pageInfo.hasNextPage && productPages.length > 0" 
+          v-else-if="!pageInfo.hasNextPage && allProducts.length > 0" 
           class="text-sm text-gray-400 dark:text-gray-500"
         >
-          — 已加载全部产品 ({{ productPages.reduce((acc, page) => acc + page.length, 0) }}件) —
+          — 已加载全部产品 ({{ allProducts.length }}件) —
         </span>
         
         <!-- 空状态 -->
         <span 
-          v-else-if="!loading && productPages.length === 0" 
+          v-else-if="!loading && allProducts.length === 0" 
           class="text-gray-400 dark:text-gray-500"
         >
-          口感快车高端茶样
+          暂无产品
         </span>
       </div>
     </div>
