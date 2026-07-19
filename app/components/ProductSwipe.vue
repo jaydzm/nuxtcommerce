@@ -8,19 +8,16 @@
     @keydown="onKeyDown"
     tabindex="0"
   >
-    <!-- 加载状态 -->
     <div v-if="loading && products.length === 0" class="loading-state">
       加载中...
     </div>
     
-    <!-- 产品卡片 -->
     <div
       v-for="(product, index) in products"
       :key="product.id"
       class="product-card"
       :style="{ transform: `translateY(${(index - currentIndex) * 100}vh)` }"
     >
-      <!-- 图片轮播区（左右滑动） -->
       <div 
         class="product-image-carousel"
         @touchstart="onImageTouchStart"
@@ -44,7 +41,6 @@
           </div>
         </div>
         
-        <!-- 图片指示器 -->
         <div v-if="getProductImages(product).length > 1" class="image-dots">
           <span 
             v-for="(_, idx) in getProductImages(product)" 
@@ -54,7 +50,6 @@
           ></span>
         </div>
         
-        <!-- 左右箭头（电脑端） -->
         <button 
           v-if="getProductImages(product).length > 1" 
           class="arrow arrow-left"
@@ -71,7 +66,6 @@
         </button>
       </div>
       
-      <!-- 产品信息 -->
       <div class="product-info">
         <h2>{{ product.name }}</h2>
         <p class="price">{{ product.price }}</p>
@@ -85,7 +79,6 @@
       </div>
     </div>
     
-    <!-- 加载更多 -->
     <div v-if="loading && products.length > 0" class="loading-more">
       加载更多...
     </div>
@@ -102,7 +95,6 @@ const props = defineProps({
   }
 });
 
-// ========== 状态 ==========
 const products = ref([]);
 const currentIndex = ref(0);
 const imageIndex = ref(0);
@@ -111,7 +103,6 @@ const hasMore = ref(true);
 const after = ref(null);
 const addingToCart = ref(false);
 
-// ========== 获取产品图片 ==========
 const getProductImages = (product) => {
   if (product.images?.nodes && product.images.nodes.length > 0) {
     return product.images.nodes;
@@ -122,19 +113,17 @@ const getProductImages = (product) => {
   return [];
 };
 
-// ========== 添加到购物车 ==========
 const addToCart = async (product) => {
   if (addingToCart.value) return;
   addingToCart.value = true;
   
   try {
     const productId = product.databaseId || product.id;
-    const response = await $fetch('/api/cart/add', {
+    await $fetch('/api/cart/add', {
       method: 'POST',
       body: { productId, quantity: 1 }
     });
-    console.log('已添加到购物车:', response);
-    // 可选：显示成功提示
+    console.log('已添加到购物车');
   } catch (err) {
     console.error('添加到购物车失败:', err);
   } finally {
@@ -142,7 +131,6 @@ const addToCart = async (product) => {
   }
 };
 
-// ========== 数据加载 ==========
 const fetchProducts = async () => {
   if (loading.value || !hasMore.value) return;
   loading.value = true;
@@ -168,7 +156,6 @@ const fetchProducts = async () => {
   }
 };
 
-// ========== 图片导航 ==========
 const nextImage = () => {
   const currentProduct = products.value[currentIndex.value];
   const images = getProductImages(currentProduct);
@@ -183,7 +170,6 @@ const prevImage = () => {
   }
 };
 
-// ========== 预加载检查 ==========
 const checkPreload = () => {
   if (currentIndex.value > products.value.length - 3 && hasMore.value && !loading.value) {
     fetchProducts();
@@ -191,28 +177,21 @@ const checkPreload = () => {
 };
 
 // ========== 垂直滑动（产品切换） ==========
-const onWheel = (e) => {
-  e.preventDefault();
-  if (e.deltaY > 0 && currentIndex.value < products.value.length - 1) {
-    currentIndex.value++;
-    imageIndex.value = 0;
-  } else if (e.deltaY < 0 && currentIndex.value > 0) {
-    currentIndex.value--;
-    imageIndex.value = 0;
-  }
-  checkPreload();
-};
-
-// ========== 触摸滑动（产品切换） ==========
 let touchStartY = 0;
 let isSwiping = false;
 
 const onTouchStart = (e) => {
+  const target = e.target.closest('.product-image-carousel');
+  if (target) return;
+  
   touchStartY = e.touches[0].clientY;
   isSwiping = true;
 };
 
 const onTouchMove = (e) => {
+  const target = e.target.closest('.product-image-carousel');
+  if (target) return;
+  
   if (!isSwiping) return;
   const deltaY = touchStartY - e.touches[0].clientY;
   
@@ -232,7 +211,7 @@ const onTouchEnd = () => {
   isSwiping = false;
 };
 
-// ========== 图片左右滑动（触摸） ==========
+// ========== 图片水平滑动 ==========
 let imageTouchStartX = 0;
 let isImageSwiping = false;
 
@@ -243,17 +222,18 @@ const onImageTouchStart = (e) => {
 };
 
 const onImageTouchMove = (e) => {
-  if (!isImageSwiping) return;
   e.stopPropagation();
+  if (!isImageSwiping) return;
+  
   const deltaX = imageTouchStartX - e.touches[0].clientX;
   const currentProduct = products.value[currentIndex.value];
   const images = getProductImages(currentProduct);
   if (!currentProduct || images.length === 0) return;
   
-  if (deltaX > 50 && imageIndex.value < images.length - 1) {
+  if (deltaX > 30 && imageIndex.value < images.length - 1) {
     imageIndex.value++;
     isImageSwiping = false;
-  } else if (deltaX < -50 && imageIndex.value > 0) {
+  } else if (deltaX < -30 && imageIndex.value > 0) {
     imageIndex.value--;
     isImageSwiping = false;
   }
@@ -283,7 +263,19 @@ const onKeyDown = (e) => {
   checkPreload();
 };
 
-// ========== 生命周期 ==========
+// ========== 鼠标滚轮 ==========
+const onWheel = (e) => {
+  e.preventDefault();
+  if (e.deltaY > 0 && currentIndex.value < products.value.length - 1) {
+    currentIndex.value++;
+    imageIndex.value = 0;
+  } else if (e.deltaY < 0 && currentIndex.value > 0) {
+    currentIndex.value--;
+    imageIndex.value = 0;
+  }
+  checkPreload();
+};
+
 onMounted(() => {
   fetchProducts();
 });
@@ -315,6 +307,7 @@ onMounted(() => {
   position: relative;
   overflow: hidden;
   background: #f5f5f5;
+  touch-action: pan-y;
 }
 
 .image-track {
