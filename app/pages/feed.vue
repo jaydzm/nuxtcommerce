@@ -18,22 +18,22 @@ function toggleFav(id: string) {
   }
 }
 
-// 【核心修复】：全面兼容 WordPress / WPGraphQL 的各种奇葩图片字段结构
+// 【终极核心修复】：精准狙击你 WooCommerce 站点的真实的 images[0].url 数据结构
 function getProductImage(product: any) {
   if (!product) return ''
   
-  // 优先提取直接绑定的 image 对象字段
-  if (product.image) {
-    return product.image.mediaItemUrl || 
-           product.image.sourceUrl || 
-           product.image.src || 
-           product.image.url || 
-           ''
+  // 🎯 黄金准则：读取你后端返回的 images 数组第一张图的 url 字段
+  if (product.images && product.images.length > 0) {
+    return product.images[0].url || product.images[0].src || ''
   }
   
-  // 备用：有些 WooCommerce 接口会把多图放在 images 数组里
-  if (product.images && product.images.length > 0) {
-    return product.images[0].src || product.images[0].url || ''
+  // 银色备份：兼容单数 image 对象的各种情况
+  if (product.image) {
+    return product.image.url || 
+           product.image.mediaItemUrl || 
+           product.image.sourceUrl || 
+           product.image.src || 
+           ''
   }
   
   return ''
@@ -91,14 +91,15 @@ function onScroll(event: Event) {
   }
 }
 
-// 模拟购物车操作提示
-function handleAddToCart(product: any) {
-  alert(`已将商品 [${product.name}] 成功加入购物车！`)
-}
+const router = useRouter()
 
-onMounted(() => {
-  fetchFeedData(false)
-})
+// 4. 点击抢购直接打通交易闭环，引流至详情页完成下单
+function handleAddToCart(product: any) {
+  if (product.slug) {
+    // 自动适配你项目的详情页路径，如果根路径就是详情，请改为 `/${product.slug}`
+    router.push(`/product/${product.slug}`) 
+  }
+}
 </script>
 
 <template>
@@ -120,7 +121,7 @@ onMounted(() => {
       :key="product.id" 
       class="w-full h-screen snap-start relative flex items-center justify-center overflow-hidden"
     >
-      <!-- 【重大升级】：高级视差大图层 -->
+      <!-- 高级视差大图层 -->
       <div class="absolute inset-0 w-full h-full bg-gray-950 flex items-center justify-center">
         
         <!-- 视觉方案 1: 背景毛玻璃，将原图放大、模糊、调暗，用来优雅填满手机两侧黑边 -->
@@ -138,7 +139,7 @@ onMounted(() => {
           class="relative max-w-full max-h-[70vh] object-contain z-10 animate-fade-in"
         />
 
-        <!-- 视觉方案 3: 没有任何字段能拿到图片时的兜底 UI -->
+        <!-- 视觉方案 3: 兜底 UI -->
         <div 
           v-if="!getProductImage(product)" 
           class="text-gray-600 flex flex-col items-center gap-2 z-10"
