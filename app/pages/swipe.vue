@@ -1,19 +1,33 @@
+<!-- app/pages/swipe.vue -->
 <template>
-  <div class="swipe-container">
+  <div class="swipe-page">
     <ProductSwipe :category-slug="categorySlug" />
   </div>
 </template>
 
 <script setup>
-// 从 URL 参数获取分类，如果没有则显示全部
 const route = useRoute();
 const categorySlug = route.query.category || '';
 </script>
 
-<style scoped>
-.swipe-container {
-  height: 100vh;
+<style>
+/* 全局重置：禁止页面滚动 */
+html,
+body {
+  margin: 0;
+  padding: 0;
   overflow: hidden;
+  height: 100%;
+  width: 100%;
+}
+</style>
+
+<style scoped>
+.swipe-page {
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  position: relative;
   background: #000;
 }
 </style>
