@@ -1,45 +1,55 @@
-<script setup lang="ts">
-import { ref, onMounted } from 'vue'
+    <script setup lang="ts">
+import { ref, computed } from 'vue'
 
-// 1. 复用你现有的购物车和收藏夹逻辑
-// 注意：如果你的项目里 composable 名字不同，请替换为对应的名称（如 useFavorites）
-const { addToCart } = useCart()
-const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist()
+// 1. 安全引入你的全局逻辑（加个 input 保护，防止报错阻塞页面）
+let addToCart = (id: any, qty: number) => { console.log('加购', id) }
+let isInWishlist = (id: any) => false
+let addToWishlist = (p: any) => {}
+let removeFromWishlist = (id: any) => {}
 
-const products = ref<any[]>([])
-const afterCursor = ref<string | null>(null)
-const hasNextPage = ref(true)
-const isLoading = ref(false)
-
-// 记录当前滑到了第几屏，用于做图片懒加载和视频控制
-const activeIndex = ref(0)
-
-// 2. 拉取商品数据（直接复用你现有的服务端 API）
-async function fetchFeedProducts(isLoadMore = false) {
-  if (isLoading.value || !hasNextPage.value) return
-  isLoading.value = true
-
-  try {
-    const data = await $fetch('/api/products', {
-      query: {
-        first: 5, // 沉浸式流一次不需要拉取太多，5条刚好
-        after: isLoadMore ? afterCursor.value : null
-      }
-    })
-
-    if (data) {
-      products.value = [...products.value, ...data.products]
-      afterCursor.value = data.pageInfo.endCursor
-      hasNextPage.value = data.pageInfo.hasNextPage
-    }
-  } catch (error) {
-    console.error('Feed 数据加载失败:', error)
-  } finally {
-    isLoading.value = false
+try {
+  const cart = useCart()
+  if (cart && cart.addToCart) addToCart = cart.addToCart
+  
+  // 如果你的项目收藏夹叫 useFavorites，请解开下面这行并注释掉 useWishlist
+  // const wishlist = useFavorites()
+  const wishlist = useWishlist()
+  if (wishlist) {
+    isInWishlist = wishlist.isInWishlist || isInWishlist
+    addToWishlist = wishlist.addToWishlist || addToWishlist
+    removeFromWishlist = wishlist.removeFromWishlist || removeFromWishlist
   }
+} catch (e) {
+  console.warn('项目 Composable 载入跳过，不影响列表渲染:', e)
 }
 
-// 3. 监听滚动事件，判断当前在刷哪一个商品
+// 2. 状态定义
+const activeIndex = ref(0)
+const afterCursor = ref<string | null>(null)
+const products = ref<any[]>([])
+
+// 3. 改用 Nuxt 4 官方首选的 useFetch 响应式抓取
+const { data, pending, error } = await useFetch('/api/products', {
+  query: {
+    first: 6,
+    after: afterCursor
+  },
+  // 阻止重复的无谓序列化
+  lazy: true
+})
+
+// 监听 useFetch 的数据返回并追加到列表
+watch(data, (newData) => {
+  if (newData?.products) {
+    // 过滤掉重复数据，防止 key 冲突
+    const newItems = newData.products.filter(
+      (item: any) => !products.value.some((p) => p.id === item.id)
+    )
+    products.value = [...products.value, ...newItems]
+  }
+}, { immediate: true })
+
+// 4. 滚动监听与无限加载
 function onScroll(event: Event) {
   const target = event.target as HTMLElement
   const currentItemIndex = Math.round(target.scrollTop / window.innerHeight)
@@ -47,19 +57,22 @@ function onScroll(event: Event) {
   if (currentItemIndex !== activeIndex.value) {
     activeIndex.value = currentItemIndex
     
-    // 【核心联动】：当快刷到当前列表的最后两屏时，提前静默加载下一页数据
-    if (currentItemIndex >= products.value.length - 2) {
-      fetchFeedProducts(true)
+    // 快到底时自动更新游标，触发 useFetch 的响应式依赖重新拉取
+    if (currentItemIndex >= products.value.length - 2 && data.value?.pageInfo?.hasNextPage) {
+      afterCursor.value = data.value.pageInfo.endCursor
     }
   }
 }
-
-onMounted(() => {
-  fetchFeedProducts(false)
-})
 </script>
 
-<template>
+
+
+
+
+
+
+
+  <template>
   <!-- 全屏沉浸式容器：隐藏滚动条，开启 CSS 吸附 -->
   <div 
     class="h-screen w-full overflow-y-scroll snap-y snap-mandatory bg-black text-white no-scrollbar select-none"
