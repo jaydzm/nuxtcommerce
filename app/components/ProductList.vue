@@ -18,29 +18,15 @@ const loading = ref(false);
 const error = ref(null);
 const loadMoreTrigger = ref(null);
 
-// ============ 随机种子管理 ============
-// 为每一页生成独立的种子，并持久化
+// ============ 每页独立随机（刷新时重新生成） ============
+// 不保存到 localStorage，每次刷新都重新生成
 const getPageSeed = (pageIndex) => {
-  const seedKey = `page_seed_${pageIndex}`;
-  let seed = localStorage.getItem(seedKey);
-  if (!seed) {
-    seed = String(Math.floor(Math.random() * 99999) + 1);
-    localStorage.setItem(seedKey, seed);
-  }
-  return parseInt(seed);
+  // 使用页面索引 + 当前时间戳，确保每次刷新都不同
+  const timestamp = Date.now();
+  return Math.floor((timestamp + pageIndex * 1000) % 99999) + 1;
 };
 
-// 重置所有种子（分类切换时调用）
-const resetAllSeeds = () => {
-  const keys = Object.keys(localStorage);
-  keys.forEach(key => {
-    if (key.startsWith('page_seed_')) {
-      localStorage.removeItem(key);
-    }
-  });
-};
-
-// ============ 可种子化的随机打乱 ============
+// 可种子化的随机打乱
 const seededShuffle = (array, seed) => {
   const result = [...array];
   let m = result.length;
@@ -62,13 +48,10 @@ const seededShuffle = (array, seed) => {
 
 // ============ 计算属性：每页独立打乱后合并 ============
 const products = computed(() => {
-  // 对每一页独立打乱
   const shuffledPages = productPages.value.map((page, index) => {
     const seed = getPageSeed(index);
     return seededShuffle(page, seed);
   });
-  
-  // 合并所有页面
   return shuffledPages.flat();
 });
 
@@ -82,7 +65,6 @@ const fetchProducts = async (after = null) => {
     const query = new URLSearchParams();
     if (after) query.append('after', after);
     if (props.categorySlug) query.append('category', props.categorySlug);
-    // 每页加载数量
     query.append('per_page', 12);
     
     const data = await $fetch(`/api/products?${query.toString()}`);
@@ -90,10 +72,8 @@ const fetchProducts = async (after = null) => {
     const newProducts = data.products.nodes || [];
     
     if (after) {
-      // 追加新页面
       productPages.value = [...productPages.value, newProducts];
     } else {
-      // 重置，只有第一页
       productPages.value = [newProducts];
     }
     pageInfo.value = data.products.pageInfo;
@@ -107,7 +87,6 @@ const fetchProducts = async (after = null) => {
 
 // ============ 重置并重新加载 ============
 const resetAndFetch = async () => {
-  resetAllSeeds(); // 清除所有种子
   productPages.value = [];
   pageInfo.value = { hasNextPage: false, endCursor: '' };
   await fetchProducts();
@@ -134,11 +113,10 @@ onMounted(() => {
   fetchProducts();
 });
 
-// ============ 暴露方法给父组件 ============
+// ============ 暴露方法 ============
 defineExpose({
   resetAndFetch,
-  fetchProducts,
-  resetAllSeeds
+  fetchProducts
 });
 </script>
 
@@ -155,25 +133,18 @@ defineExpose({
       </button>
     </div>
 
-    <!-- 产品网格 -->
     <div v-else>
       <div 
         class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 md:gap-6"
       >
-        <!-- 实际产品卡片 -->
         <ProductCard 
           v-for="product in products" 
           :key="product.sku || product.id" 
           :products="[product]" 
         />
         
-        <!-- 骨架屏占位（首次加载） -->
         <template v-if="loading && productPages.length === 0">
-          <div
-            v-for="n in 12"
-            :key="'skeleton-' + n"
-            class="group select-none"
-          >
+          <div v-for="n in 12" :key="'skeleton-' + n" class="group select-none">
             <div class="cursor-pointer transition ease-[ease] duration-300">
               <div class="relative pb-[133%] rounded-2xl overflow-hidden dark:shadow-[0_8px_24px_rgba(0,0,0,.5)] animate-pulse">
                 <div class="absolute h-full w-full dark:bg-neutral-800 bg-neutral-200"></div>
@@ -188,19 +159,16 @@ defineExpose({
         </template>
       </div>
 
-      <!-- 加载更多触发器 -->
       <div 
         ref="loadMoreTrigger" 
         class="flex justify-center items-center py-8 min-h-[60px]"
         :class="{ 'min-h-[80px]': pageInfo.hasNextPage }"
       >
-        <!-- 加载更多时的加载指示器 -->
         <div v-if="loading && productPages.length > 0" class="flex flex-col items-center gap-2">
           <div class="w-6 h-6 border-2 border-gray-300 dark:border-gray-600 border-t-primary-600 dark:border-t-primary-400 rounded-full animate-spin"></div>
           <span class="text-sm text-gray-400 dark:text-gray-500">加载更多...</span>
         </div>
         
-        <!-- 已加载全部 -->
         <span 
           v-else-if="!pageInfo.hasNextPage && productPages.length > 0" 
           class="text-sm text-gray-400 dark:text-gray-500"
@@ -208,7 +176,6 @@ defineExpose({
           — 已加载全部产品 ({{ productPages.reduce((acc, page) => acc + page.length, 0) }}件) —
         </span>
         
-        <!-- 空状态 -->
         <span 
           v-else-if="!loading && productPages.length === 0" 
           class="text-gray-400 dark:text-gray-500"
@@ -225,7 +192,6 @@ defineExpose({
   max-width: 1400px;
 }
 
-/* 美化滚动条 - Pinterest 风格 */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -245,7 +211,6 @@ defineExpose({
   background: #a8a8a8;
 }
 
-/* 暗色模式滚动条 */
 @media (prefers-color-scheme: dark) {
   ::-webkit-scrollbar-track {
     background: #2d2d2d;
