@@ -1,5 +1,6 @@
 <!-- app/components/ProductList.vue -->
 <script setup>
+import { useInfiniteScroll } from '@vueuse/core';
 import { ref, onMounted, watch, computed } from 'vue';
 
 // Props
@@ -14,31 +15,28 @@ const props = defineProps({
 const allProducts = ref([]);
 const loading = ref(false);
 const error = ref(null);
-const currentPage = ref(1);
-const pageSize = 4; // 每页显示4个
+const displayCount = ref(4); // 当前显示数量，每次加载+4
 const loadMoreTrigger = ref(null);
 
 // ============ 计算属性 ============
-// 当前页显示的产品（按原始顺序）
-const displayProducts = computed(() => {
-  const start = (currentPage.value - 1) * pageSize;
-  const end = start + pageSize;
-  return allProducts.value.slice(start, end);
+// 当前显示的产品（前 N 个）
+const products = computed(() => {
+  return allProducts.value.slice(0, displayCount.value);
 });
 
-// 是否还有更多数据
+// 是否还有更多
 const hasMore = computed(() => {
-  return currentPage.value * pageSize < allProducts.value.length;
-});
-
-// 总页数
-const totalPages = computed(() => {
-  return Math.ceil(allProducts.value.length / pageSize);
+  return displayCount.value < allProducts.value.length;
 });
 
 // 总产品数
 const totalCount = computed(() => {
   return allProducts.value.length;
+});
+
+// 已加载数量
+const loadedCount = computed(() => {
+  return products.value.length;
 });
 
 // ============ 加载函数 ============
@@ -50,12 +48,12 @@ const fetchProducts = async () => {
   try {
     const query = new URLSearchParams();
     if (props.categorySlug) query.append('category', props.categorySlug);
-    query.append('per_page', 100); // 一次性加载所有产品
+    query.append('per_page', 100);
     
     const data = await $fetch(`/api/products?${query.toString()}`);
     
     allProducts.value = data.products.nodes || [];
-    currentPage.value = 1;
+    displayCount.value = 4; // 初始显示4个
   } catch (err) {
     error.value = err;
     console.error('加载产品失败:', err);
@@ -64,17 +62,16 @@ const fetchProducts = async () => {
   }
 };
 
-// ============ 加载更多 ============
+// ============ 加载更多（追加4个） ============
 const loadMore = () => {
-  if (hasMore.value && !loading.value) {
-    currentPage.value++;
-  }
+  if (!hasMore.value || loading.value) return;
+  displayCount.value += 4; // 每次追加4个
 };
 
-// ============ 重置并重新加载 ============
+// ============ 重置 ============
 const resetAndFetch = async () => {
   allProducts.value = [];
-  currentPage.value = 1;
+  displayCount.value = 4;
   await fetchProducts();
 };
 
@@ -84,49 +81,26 @@ watch(() => props.categorySlug, () => {
 });
 
 // ============ 无限滚动 ============
-watch(loadMoreTrigger, (newVal) => {
-  if (newVal) {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasMore.value && !loading.value) {
-          loadMore();
-        }
-      },
-      { threshold: 0.1 }
-    );
-    
-    observer.observe(newVal);
-    
-    if (window.__observer) {
-      window.__observer.disconnect();
+useInfiniteScroll(
+  loadMoreTrigger,
+  () => {
+    if (hasMore.value && !loading.value) {
+      loadMore();
     }
-    window.__observer = observer;
-  }
-});
+  },
+  { distance: 100 }
+);
 
 // ============ 首次加载 ============
 onMounted(() => {
   fetchProducts();
 });
 
-// 组件卸载时清理
-onMounted(() => {
-  return () => {
-    if (window.__observer) {
-      window.__observer.disconnect();
-    }
-  };
-});
-
-// ============ 暴露方法给父组件 ============
+// ============ 暴露方法 ============
 defineExpose({
   resetAndFetch,
   fetchProducts,
-  goToPage: (page) => {
-    if (page >= 1 && page <= totalPages.value) {
-      currentPage.value = page;
-    }
-  }
+  loadMore
 });
 </script>
 
@@ -145,13 +119,13 @@ defineExpose({
 
     <!-- 产品网格 -->
     <div v-else>
-      <!-- 显示当前页数和总数 -->
+      <!-- 显示加载进度 -->
       <div v-if="totalCount > 0" class="flex justify-between items-center mb-4">
         <span class="text-sm text-gray-500 dark:text-gray-400">
           共 {{ totalCount }} 件商品
         </span>
         <span class="text-sm text-gray-500 dark:text-gray-400">
-          第 {{ currentPage }}/{{ totalPages }} 页
+          已加载 {{ loadedCount }}/{{ totalCount }}
         </span>
       </div>
 
@@ -160,12 +134,12 @@ defineExpose({
       >
         <!-- 实际产品卡片 -->
         <ProductCard 
-          v-for="product in displayProducts" 
+          v-for="product in products" 
           :key="product.sku || product.id" 
           :products="[product]" 
         />
         
-        <!-- 骨架屏占位（加载中） -->
+        <!-- 骨架屏占位（首次加载） -->
         <template v-if="loading && allProducts.length === 0">
           <div
             v-for="n in 4"
