@@ -18,11 +18,13 @@
       class="product-card"
       :style="{ transform: `translateY(${(index - currentIndex) * 100}vh)` }"
     >
+      <!-- 全屏图片轮播 -->
       <div 
         class="product-image-carousel"
         @touchstart="onImageTouchStart"
         @touchmove="onImageTouchMove"
         @touchend="onImageTouchEnd"
+        @touchcancel="onImageTouchEnd"
       >
         <div 
           class="image-track"
@@ -37,10 +39,12 @@
               :src="image.sourceUrl || image.src" 
               :alt="product.name" 
               loading="lazy"
+              draggable="false"
             />
           </div>
         </div>
         
+        <!-- 图片指示器 -->
         <div v-if="getProductImages(product).length > 1" class="image-dots">
           <span 
             v-for="(_, idx) in getProductImages(product)" 
@@ -50,6 +54,7 @@
           ></span>
         </div>
         
+        <!-- 左右箭头 -->
         <button 
           v-if="getProductImages(product).length > 1" 
           class="arrow arrow-left"
@@ -64,18 +69,21 @@
         >
           ›
         </button>
-      </div>
-      
-      <div class="product-info">
-        <h2>{{ product.name }}</h2>
-        <p class="price">{{ product.price }}</p>
-        <button 
-          class="add-to-cart" 
-          @click="addToCart(product)"
-          :disabled="addingToCart"
-        >
-          {{ addingToCart ? '添加中...' : '加入购物车' }}
-        </button>
+        
+        <!-- ===== 浮动信息层（在图片上方） ===== -->
+        <div class="product-overlay">
+          <div class="product-info">
+            <h2>{{ product.name }}</h2>
+            <p class="price">{{ product.price }}</p>
+            <button 
+              class="add-to-cart" 
+              @click.stop="addToCart(product)"
+              :disabled="addingToCart"
+            >
+              {{ addingToCart ? '添加中...' : '加入购物车' }}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
     
@@ -181,17 +189,11 @@ let touchStartY = 0;
 let isSwiping = false;
 
 const onTouchStart = (e) => {
-  const target = e.target.closest('.product-image-carousel');
-  if (target) return;
-  
   touchStartY = e.touches[0].clientY;
   isSwiping = true;
 };
 
 const onTouchMove = (e) => {
-  const target = e.target.closest('.product-image-carousel');
-  if (target) return;
-  
   if (!isSwiping) return;
   const deltaY = touchStartY - e.touches[0].clientY;
   
@@ -211,23 +213,22 @@ const onTouchEnd = () => {
   isSwiping = false;
 };
 
-// ========== 图片水平滑动（修复版） ==========
+// ========== 图片水平滑动 ==========
 let imageTouchStartX = 0;
 let imageTouchStartY = 0;
 let isImageSwiping = false;
+let imageSwipeDirection = null;
 
 const onImageTouchStart = (e) => {
-  e.preventDefault();
   e.stopPropagation();
-  
   const touch = e.touches[0];
   imageTouchStartX = touch.clientX;
   imageTouchStartY = touch.clientY;
   isImageSwiping = true;
+  imageSwipeDirection = null;
 };
 
 const onImageTouchMove = (e) => {
-  e.preventDefault();
   e.stopPropagation();
   
   if (!isImageSwiping) return;
@@ -236,7 +237,25 @@ const onImageTouchMove = (e) => {
   const deltaX = imageTouchStartX - touch.clientX;
   const deltaY = imageTouchStartY - touch.clientY;
   
-  if (Math.abs(deltaX) < 30 || Math.abs(deltaX) < Math.abs(deltaY)) {
+  if (imageSwipeDirection === null) {
+    if (Math.abs(deltaX) > 15 || Math.abs(deltaY) > 15) {
+      imageSwipeDirection = Math.abs(deltaX) > Math.abs(deltaY) ? 'horizontal' : 'vertical';
+    } else {
+      return;
+    }
+  }
+  
+  if (imageSwipeDirection === 'vertical') {
+    if (deltaY > 30 && currentIndex.value < products.value.length - 1) {
+      currentIndex.value++;
+      imageIndex.value = 0;
+      isImageSwiping = false;
+    } else if (deltaY < -30 && currentIndex.value > 0) {
+      currentIndex.value--;
+      imageIndex.value = 0;
+      isImageSwiping = false;
+    }
+    checkPreload();
     return;
   }
   
@@ -254,9 +273,9 @@ const onImageTouchMove = (e) => {
 };
 
 const onImageTouchEnd = (e) => {
-  e.preventDefault();
   e.stopPropagation();
   isImageSwiping = false;
+  imageSwipeDirection = null;
 };
 
 // ========== 键盘支持 ==========
@@ -314,43 +333,46 @@ onMounted(() => {
   transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   display: flex;
   flex-direction: column;
-  background: #fff;
+  background: #000;
 }
 
+/* ===== 图片轮播：全屏 ===== */
 .product-image-carousel {
   flex: 1;
   position: relative;
   overflow: hidden;
-  background: #f5f5f5;
-  touch-action: none;
+  background: #000;
+  touch-action: pan-y;
+  width: 100%;
+  height: 100%;
 }
 
 .image-track {
   display: flex;
   height: 100%;
   transition: transform 0.3s ease;
-  touch-action: none;
 }
 
 .image-slide {
   min-width: 100%;
   height: 100%;
-  touch-action: none;
 }
 
 .image-slide img {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  background: #f5f5f5;
+  background: #000;
   pointer-events: none;
   user-select: none;
   -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
+/* ===== 图片指示器 ===== */
 .image-dots {
   position: absolute;
-  bottom: 20px;
+  bottom: 120px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -377,32 +399,34 @@ onMounted(() => {
   border-radius: 4px;
 }
 
+/* ===== 箭头 ===== */
 .arrow {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  background: rgba(0,0,0,0.4);
+  background: rgba(0,0,0,0.3);
   color: #fff;
   border: none;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
-  font-size: 24px;
+  font-size: 28px;
   cursor: pointer;
   z-index: 10;
   transition: background 0.2s;
   display: none;
+  backdrop-filter: blur(4px);
 }
 
 .arrow:hover {
-  background: rgba(0,0,0,0.7);
+  background: rgba(0,0,0,0.6);
 }
 
 .arrow-left {
-  left: 10px;
+  left: 12px;
 }
 .arrow-right {
-  right: 10px;
+  right: 12px;
 }
 
 @media (hover: hover) {
@@ -411,48 +435,74 @@ onMounted(() => {
   }
 }
 
+/* ===== 浮动信息层（在图片上方） ===== */
+.product-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 30px 24px 50px;
+  background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%);
+  pointer-events: none;
+  z-index: 3;
+}
+
+.product-overlay * {
+  pointer-events: auto;
+}
+
 .product-info {
-  padding: 20px 24px 30px;
-  background: #fff;
-  box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+  max-width: 500px;
+  margin: 0 auto;
 }
 
 .product-info h2 {
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 600;
-  margin: 0 0 4px;
-  color: #1a1a1a;
+  margin: 0 0 6px;
+  color: #fff;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.5);
 }
 
-.price {
-  font-size: 22px;
+.product-info .price {
+  font-size: 26px;
   font-weight: bold;
-  color: #b7903c;
-  margin: 0 0 12px;
+  color: #ffd700;
+  margin: 0 0 16px;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.5);
 }
 
 .add-to-cart {
   width: 100%;
-  padding: 14px;
+  max-width: 300px;
+  padding: 16px;
   background: #b7903c;
   color: #fff;
   border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: 500;
+  border-radius: 12px;
+  font-size: 18px;
+  font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.2s, transform 0.15s;
+  letter-spacing: 1px;
 }
 
 .add-to-cart:hover {
   background: #a07f30;
+  transform: scale(1.02);
+}
+
+.add-to-cart:active {
+  transform: scale(0.97);
 }
 
 .add-to-cart:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  transform: none;
 }
 
+/* ===== 加载状态 ===== */
 .loading-state, .loading-more {
   display: flex;
   justify-content: center;
