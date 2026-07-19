@@ -8,26 +8,27 @@
 <script setup>
 const route = useRoute();
 const categorySlug = route.query.category || '';
-</script>
 
-<style>
-/* 全局重置：禁止页面滚动 */
-html,
-body {
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  height: 100%;
-  width: 100%;
-}
-</style>
+// 页面进入时禁止滚动，离开时恢复
+onMounted(() => {
+  document.body.style.overflow = 'hidden';
+  document.documentElement.style.overflow = 'hidden';
+});
+
+onBeforeUnmount(() => {
+  document.body.style.overflow = '';
+  document.documentElement.style.overflow = '';
+});
+</script>
 
 <style scoped>
 .swipe-page {
   height: 100vh;
   width: 100vw;
   overflow: hidden;
-  position: relative;
+  position: fixed;
+  top: 0;
+  left: 0;
   background: #000;
 }
 </style>
