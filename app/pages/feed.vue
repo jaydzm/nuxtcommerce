@@ -8,7 +8,7 @@ const hasNextPage = ref(true)
 const isLoading = ref(false)
 const activeIndex = ref(0)
 
-// 模拟收藏状态（不依赖项目外部 composable，防止部署死锁）
+// 模拟收藏状态，防止项目外部引用报错卡部署
 const favList = ref<string[]>([])
 function toggleFav(id: string) {
   if (favList.value.includes(id)) {
@@ -18,14 +18,37 @@ function toggleFav(id: string) {
   }
 }
 
-// 2. 纯客户端异步加载，Nitro 编译时完全不会报错
+// 【核心修复】：全面兼容 WordPress / WPGraphQL 的各种奇葩图片字段结构
+function getProductImage(product: any) {
+  if (!product) return ''
+  
+  // 优先提取直接绑定的 image 对象字段
+  if (product.image) {
+    return product.image.mediaItemUrl || 
+           product.image.sourceUrl || 
+           product.image.src || 
+           product.image.url || 
+           ''
+  }
+  
+  // 备用：有些 WooCommerce 接口会把多图放在 images 数组里
+  if (product.images && product.images.length > 0) {
+    return product.images[0].src || product.images[0].url || ''
+  }
+  
+  return ''
+}
+
+// 2. 纯客户端异步加载，确保 Vercel 编译 100% 畅通
 async function fetchFeedData(isLoadMore = false) {
   if (isLoading.value || (!hasNextPage.value && isLoadMore)) return
   isLoading.value = true
 
   try {
-    // 请求你项目自带的服务端接口
-    const data = await $fetch('/api/products', {
+    // 自动动态获取当前域名，防止线上跨域或 SSR 路由死锁
+    const { origin } = useRequestURL()
+    
+    const data = await $fetch(`${origin}/api/products`, {
       query: {
         first: 5,
         after: isLoadMore ? afterCursor.value : null
@@ -34,7 +57,7 @@ async function fetchFeedData(isLoadMore = false) {
 
     if (data && data.products) {
       if (isLoadMore) {
-        // 过滤可能重复的 key
+        // 过滤可能重复的 key，防止 Vue 渲染爆关键 key 冲突
         const newItems = data.products.filter(
           (item: any) => !products.value.some((p) => p.id === item.id)
         )
@@ -47,7 +70,7 @@ async function fetchFeedData(isLoadMore = false) {
       hasNextPage.value = data.pageInfo?.hasNextPage || false
     }
   } catch (error) {
-    console.error('Feed 核心接口请求失败，请检查 GQL_HOST 配置:', error)
+    console.error('Feed 核心接口请求失败，请检查 Vercel 环境变量 GQL_HOST:', error)
   } finally {
     isLoading.value = false
   }
@@ -61,7 +84,7 @@ function onScroll(event: Event) {
   if (currentItemIndex !== activeIndex.value) {
     activeIndex.value = currentItemIndex
     
-    // 当快滑到当前列表倒数第 2 条时，悄悄拉取下一页
+    // 当快滑到当前列表倒数第 2 条时，悄悄在后台拉取下一页
     if (currentItemIndex >= products.value.length - 2 && hasNextPage.value) {
       fetchFeedData(true)
     }
@@ -70,7 +93,7 @@ function onScroll(event: Event) {
 
 // 模拟购物车操作提示
 function handleAddToCart(product: any) {
-  alert(`已将商品 [${product.name}] 加入购物车！`)
+  alert(`已将商品 [${product.name}] 成功加入购物车！`)
 }
 
 onMounted(() => {
@@ -84,7 +107,7 @@ onMounted(() => {
     class="h-screen w-full overflow-y-scroll snap-y snap-mandatory bg-black text-white no-scrollbar select-none fixed inset-0 z-50"
     @scroll="onScroll"
   >
-    <!-- 返回首页按钮 -->
+    <!-- 左上角返回首页按钮 -->
     <NuxtLink to="/" class="absolute top-6 left-6 z-50 p-2 bg-black/50 backdrop-blur-md rounded-full text-white hover:bg-black/70 transition-colors">
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
         <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
@@ -97,29 +120,49 @@ onMounted(() => {
       :key="product.id" 
       class="w-full h-screen snap-start relative flex items-center justify-center overflow-hidden"
     >
-      <!-- 主视觉大图层 -->
+      <!-- 【重大升级】：高级视差大图层 -->
       <div class="absolute inset-0 w-full h-full bg-gray-950 flex items-center justify-center">
-        <!-- 性能控制：只加载当前屏和前后一屏的图 -->
+        
+        <!-- 视觉方案 1: 背景毛玻璃，将原图放大、模糊、调暗，用来优雅填满手机两侧黑边 -->
         <img 
-          v-if="Math.abs(index - activeIndex) <= 1 && product.image?.sourceUrl"
-          :src="product.image.sourceUrl" 
-          :alt="product.name" 
-          class="w-full h-full object-cover opacity-90 animate-fade-in"
+          v-if="Math.abs(index - activeIndex) <= 1 && getProductImage(product)"
+          :src="getProductImage(product)" 
+          class="absolute inset-0 w-full h-full object-cover scale-125 blur-2xl opacity-25 select-none pointer-events-none"
         />
-        <!-- 暗色渐变蒙层，防止白图让文字看不清 -->
-        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/30" />
+
+        <!-- 视觉方案 2: 前景高保真原图，保持商品原本比例，限制高度，绝不变形拉伸 -->
+        <img 
+          v-if="Math.abs(index - activeIndex) <= 1 && getProductImage(product)"
+          :src="getProductImage(product)" 
+          :alt="product.name" 
+          class="relative max-w-full max-h-[70vh] object-contain z-10 animate-fade-in"
+        />
+
+        <!-- 视觉方案 3: 没有任何字段能拿到图片时的兜底 UI -->
+        <div 
+          v-if="!getProductImage(product)" 
+          class="text-gray-600 flex flex-col items-center gap-2 z-10"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-12 h-12">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V6.75Zm.375 0a.375 0 1 1-.75 0 .375 0 0 1 .75 0Z" />
+          </svg>
+          <span class="text-xs text-gray-500">图片资源正在同步...</span>
+        </div>
+
+        <!-- 视觉方案 4: 渐变光影蒙层，保证底部复杂的白字在任何背景下都能清晰可读 -->
+        <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent z-15" />
       </div>
 
-      <!-- 右侧浮动交互栏 -->
+      <!-- 右侧浮动交互工具栏 -->
       <div class="absolute right-4 bottom-32 flex flex-col items-center gap-6 z-20">
-        <!-- 商户头像占位 -->
-        <div class="w-12 h-12 rounded-full border-2 border-white overflow-hidden shadow-lg bg-emerald-600 flex items-center justify-center">
+        <!-- 商户头像/标志 -->
+        <div class="w-12 h-12 rounded-full border-2 border-white/80 overflow-hidden shadow-lg bg-emerald-600 flex items-center justify-center">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 text-white">
             <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.015a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72M6.75 18h3.5a.75.75 0 00.75-.75V13.5a.75.75 0 00-.75-.75h-3a.75.75 0 00-.75.75v3.75c0 .414.336.75.75.75z" />
           </svg>
         </div>
 
-        <!-- 收藏 -->
+        <!-- 收藏（点赞）红心 -->
         <button @click="toggleFav(product.id)" class="flex flex-col items-center">
           <div class="p-3 bg-black/40 backdrop-blur-md rounded-full active:scale-90 transition-transform">
             <svg xmlns="http://www.w3.org/2000/svg" :fill="favList.includes(product.id) ? '#ef4444' : 'none'" viewBox="0 0 24 24" stroke-width="2" :stroke="favList.includes(product.id) ? '#ef4444' : 'currentColor'" class="w-7 h-7">
@@ -129,7 +172,7 @@ onMounted(() => {
           <span class="text-xs mt-1 text-gray-300">收藏</span>
         </button>
 
-        <!-- 详情链接 -->
+        <!-- 详情气泡链接 -->
         <NuxtLink :to="`/product/${product.slug}`" class="flex flex-col items-center">
           <div class="p-3 bg-black/40 backdrop-blur-md rounded-full active:scale-90 transition-transform">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-7 h-7">
@@ -140,13 +183,16 @@ onMounted(() => {
         </NuxtLink>
       </div>
 
-      <!-- 底部信息与购买大按钮 -->
+      <!-- 底部文案信息与核心抢购动作区 -->
       <div class="absolute left-4 bottom-6 right-20 z-20 max-w-lg">
-        <h2 class="text-xl font-bold line-clamp-2 drop-shadow-md mb-1">{{ product.name }}</h2>
+        <!-- 商品标题 -->
+        <h2 class="text-xl font-bold line-clamp-2 drop-shadow-md mb-1 text-white">{{ product.name }}</h2>
+        <!-- 价格 -->
         <div class="text-2xl font-black text-emerald-400 drop-shadow-md mb-4">
           {{ product.price || '￥0.00' }}
         </div>
 
+        <!-- 购买按钮 -->
         <button 
           @click="handleAddToCart(product)"
           class="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold tracking-wide rounded-xl shadow-lg transition-colors flex items-center justify-center gap-2 active:scale-[0.99]"
@@ -159,22 +205,22 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- 首屏全局加载占位 -->
+    <!-- 首屏全局加载状态 -->
     <div v-if="products.length === 0 && isLoading" class="w-full h-screen flex flex-col items-center justify-center bg-black">
       <div class="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4"></div>
       <p class="text-gray-400 text-sm tracking-wide">为您加载精选好物...</p>
     </div>
 
-    <!-- 数据完全为空时的兜底提示 -->
+    <!-- 全局空状态兜底 -->
     <div v-if="products.length === 0 && !isLoading" class="w-full h-screen flex flex-col items-center justify-center bg-gray-950 px-6 text-center">
       <p class="text-gray-400 mb-2">暂无推荐商品</p>
-      <p class="text-xs text-gray-600">请确保后端 WPGraphQL 插件运行正常且已同步商品</p>
+      <p class="text-xs text-gray-600">请检查 Vercel 环境变量中 GQL_HOST 的状态</p>
     </div>
   </div>
 </template>
 
 <style scoped>
-/* 隐藏滚动条 */
+/* 纯 CSS 机制隐藏系统默认的多边滚动条，保持全屏完整度 */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
@@ -184,9 +230,9 @@ onMounted(() => {
 }
 @keyframes fadeIn {
   from { opacity: 0; }
-  to { opacity: 0.9; }
+  to { opacity: 1; }
 }
 .animate-fade-in {
-  animation: fadeIn 0.4s ease-out forwards;
+  animation: fadeIn 0.35s ease-out forwards;
 }
 </style>
