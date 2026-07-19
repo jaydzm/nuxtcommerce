@@ -1,55 +1,59 @@
-    <script setup lang="ts">
-import { ref, computed } from 'vue'
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
 
-// 1. 安全引入你的全局逻辑（加个 input 保护，防止报错阻塞页面）
-let addToCart = (id: any, qty: number) => { console.log('加购', id) }
-let isInWishlist = (id: any) => false
-let addToWishlist = (p: any) => {}
-let removeFromWishlist = (id: any) => {}
+// 1. 基础状态定义
+const products = ref<any[]>([])
+const afterCursor = ref<string | null>(null)
+const hasNextPage = ref(true)
+const isLoading = ref(false)
+const activeIndex = ref(0)
 
-try {
-  const cart = useCart()
-  if (cart && cart.addToCart) addToCart = cart.addToCart
-  
-  // 如果你的项目收藏夹叫 useFavorites，请解开下面这行并注释掉 useWishlist
-  // const wishlist = useFavorites()
-  const wishlist = useWishlist()
-  if (wishlist) {
-    isInWishlist = wishlist.isInWishlist || isInWishlist
-    addToWishlist = wishlist.addToWishlist || addToWishlist
-    removeFromWishlist = wishlist.removeFromWishlist || removeFromWishlist
+// 模拟收藏状态（不依赖项目外部 composable，防止部署死锁）
+const favList = ref<string[]>([])
+function toggleFav(id: string) {
+  if (favList.value.includes(id)) {
+    favList.value = favList.value.filter(i => i !== id)
+  } else {
+    favList.value.push(id)
   }
-} catch (e) {
-  console.warn('项目 Composable 载入跳过，不影响列表渲染:', e)
 }
 
-// 2. 状态定义
-const activeIndex = ref(0)
-const afterCursor = ref<string | null>(null)
-const products = ref<any[]>([])
+// 2. 纯客户端异步加载，Nitro 编译时完全不会报错
+async function fetchFeedData(isLoadMore = false) {
+  if (isLoading.value || (!hasNextPage.value && isLoadMore)) return
+  isLoading.value = true
 
-// 3. 改用 Nuxt 4 官方首选的 useFetch 响应式抓取
-const { data, pending, error } = await useFetch('/api/products', {
-  query: {
-    first: 6,
-    after: afterCursor
-  },
-  // 阻止重复的无谓序列化
-  lazy: true
-})
+  try {
+    // 请求你项目自带的服务端接口
+    const data = await $fetch('/api/products', {
+      query: {
+        first: 5,
+        after: isLoadMore ? afterCursor.value : null
+      }
+    })
 
-// 监听 useFetch 的数据返回并追加到列表
-watch(data, (newData) => {
-  if (newData?.products) {
-    // 过滤掉重复数据，防止 key 冲突
-    const newItems = newData.products.filter(
-      (item: any) => !products.value.some((p) => p.id === item.id)
-    )
-    products.value = [...products.value, ...newItems]
+    if (data && data.products) {
+      if (isLoadMore) {
+        // 过滤可能重复的 key
+        const newItems = data.products.filter(
+          (item: any) => !products.value.some((p) => p.id === item.id)
+        )
+        products.value = [...products.value, ...newItems]
+      } else {
+        products.value = data.products
+      }
+      
+      afterCursor.value = data.pageInfo?.endCursor || null
+      hasNextPage.value = data.pageInfo?.hasNextPage || false
+    }
+  } catch (error) {
+    console.error('Feed 核心接口请求失败，请检查 GQL_HOST 配置:', error)
+  } finally {
+    isLoading.value = false
   }
-}, { immediate: true })
+}
 
-// 4. 滚动监听与无限加载
+// 3. 垂直滚动监听：一滑一屏与静默预加载下一页
 function onScroll(event: Event) {
   const target = event.target as HTMLElement
   const currentItemIndex = Math.round(target.scrollTop / window.innerHeight)
@@ -57,132 +61,132 @@ function onScroll(event: Event) {
   if (currentItemIndex !== activeIndex.value) {
     activeIndex.value = currentItemIndex
     
-    // 快到底时自动更新游标，触发 useFetch 的响应式依赖重新拉取
-    if (currentItemIndex >= products.value.length - 2 && data.value?.pageInfo?.hasNextPage) {
-      afterCursor.value = data.value.pageInfo.endCursor
+    // 当快滑到当前列表倒数第 2 条时，悄悄拉取下一页
+    if (currentItemIndex >= products.value.length - 2 && hasNextPage.value) {
+      fetchFeedData(true)
     }
   }
 }
+
+// 模拟购物车操作提示
+function handleAddToCart(product: any) {
+  alert(`已将商品 [${product.name}] 加入购物车！`)
+}
+
+onMounted(() => {
+  fetchFeedData(false)
+})
 </script>
 
-
-
-
-
-
-
-
-  <template>
-  <!-- 全屏沉浸式容器：隐藏滚动条，开启 CSS 吸附 -->
+<template>
+  <!-- 全屏沉浸式容器 -->
   <div 
-    class="h-screen w-full overflow-y-scroll snap-y snap-mandatory bg-black text-white no-scrollbar select-none"
+    class="h-screen w-full overflow-y-scroll snap-y snap-mandatory bg-black text-white no-scrollbar select-none fixed inset-0 z-50"
     @scroll="onScroll"
   >
-    <!-- 返回按钮，方便用户退出 Feed -->
-    <NuxtLink to="/" class="absolute top-6 left-6 z-50 p-2 bg-black/40 backdrop-blur-md rounded-full text-white">
-      <UIcon name="i-heroicons-arrow-left" class="w-6 h-6" />
+    <!-- 返回首页按钮 -->
+    <NuxtLink to="/" class="absolute top-6 left-6 z-50 p-2 bg-black/50 backdrop-blur-md rounded-full text-white hover:bg-black/70 transition-colors">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+      </svg>
     </NuxtLink>
 
-    <!-- 商品单页循环 -->
+    <!-- 商品单页滑动循环 -->
     <div 
       v-for="(product, index) in products" 
       :key="product.id" 
       class="w-full h-screen snap-start relative flex items-center justify-center overflow-hidden"
     >
-      <!-- 背景主视觉：可以是全屏大图（先用项目已有的图片充当视频） -->
+      <!-- 主视觉大图层 -->
       <div class="absolute inset-0 w-full h-full bg-gray-950 flex items-center justify-center">
-        <!-- 性能优化：只有在当前屏、上一屏、下一屏的图片才真正渲染，其余懒加载 -->
+        <!-- 性能控制：只加载当前屏和前后一屏的图 -->
         <img 
           v-if="Math.abs(index - activeIndex) <= 1 && product.image?.sourceUrl"
           :src="product.image.sourceUrl" 
           :alt="product.name" 
-          class="w-full h-full object-cover opacity-90"
+          class="w-full h-full object-cover opacity-90 animate-fade-in"
         />
-        <!-- 蒙层：让底部文字看得更清楚 -->
-        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20" />
+        <!-- 暗色渐变蒙层，防止白图让文字看不清 -->
+        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/30" />
       </div>
 
-      <!-- 右侧互动工具栏（浮动在图像之上） -->
+      <!-- 右侧浮动交互栏 -->
       <div class="absolute right-4 bottom-32 flex flex-col items-center gap-6 z-20">
-        <!-- 品牌/商家头像（这里可以放个占位，或者取你的供应商数据） -->
-        <div class="w-12 h-12 rounded-full border-2 border-white overflow-hidden shadow-lg bg-gray-800 flex items-center justify-center">
-          <UIcon name="i-heroicons-shopping-bag" class="w-6 h-6 text-primary" />
+        <!-- 商户头像占位 -->
+        <div class="w-12 h-12 rounded-full border-2 border-white overflow-hidden shadow-lg bg-emerald-600 flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 text-white">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.015a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72M6.75 18h3.5a.75.75 0 00.75-.75V13.5a.75.75 0 00-.75-.75h-3a.75.75 0 00-.75.75v3.75c0 .414.336.75.75.75z" />
+          </svg>
         </div>
 
-        <!-- 收藏/红心按钮（联动你项目的收藏状态） -->
-        <button 
-          @click="isInWishlist(product.id) ? removeFromWishlist(product.id) : addToWishlist(product)"
-          class="flex flex-col items-center group"
-        >
-          <div class="p-3 bg-black/40 backdrop-blur-md rounded-full transition-transform active:scale-95">
-            <UIcon 
-              :name="isInWishlist(product.id) ? 'i-heroicons-heart-solid' : 'i-heroicons-heart'" 
-              class="w-7 h-7 transition-colors"
-              :class="isInWishlist(product.id) ? 'text-red-500' : 'text-white'"
-            />
+        <!-- 收藏 -->
+        <button @click="toggleFav(product.id)" class="flex flex-col items-center">
+          <div class="p-3 bg-black/40 backdrop-blur-md rounded-full active:scale-90 transition-transform">
+            <svg xmlns="http://www.w3.org/2000/svg" :fill="favList.includes(product.id) ? '#ef4444' : 'none'" viewBox="0 0 24 24" stroke-width="2" :stroke="favList.includes(product.id) ? '#ef4444' : 'currentColor'" class="w-7 h-7">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+            </svg>
           </div>
           <span class="text-xs mt-1 text-gray-300">收藏</span>
         </button>
 
-        <!-- 分享按钮 -->
-        <button class="flex flex-col items-center">
-          <div class="p-3 bg-black/40 backdrop-blur-md rounded-full active:scale-95">
-            <UIcon name="i-heroicons-share" class="w-7 h-7 text-white" />
+        <!-- 详情链接 -->
+        <NuxtLink :to="`/product/${product.slug}`" class="flex flex-col items-center">
+          <div class="p-3 bg-black/40 backdrop-blur-md rounded-full active:scale-90 transition-transform">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-7 h-7">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 111.063.852l-.708 2.836a.75.75 0 001.063.852l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+            </svg>
           </div>
-          <span class="text-xs mt-1 text-gray-300">分享</span>
-        </button>
+          <span class="text-xs mt-1 text-gray-300">详情</span>
+        </NuxtLink>
       </div>
 
-      <!-- 底部商品信息与购买操作区 -->
+      <!-- 底部信息与购买大按钮 -->
       <div class="absolute left-4 bottom-6 right-20 z-20 max-w-lg">
-        <!-- 商品标题与价格 -->
         <h2 class="text-xl font-bold line-clamp-2 drop-shadow-md mb-1">{{ product.name }}</h2>
-        <div class="text-2xl font-black text-primary drop-shadow-md mb-3">
-          {{ product.price || '免费' }}
+        <div class="text-2xl font-black text-emerald-400 drop-shadow-md mb-4">
+          {{ product.price || '￥0.00' }}
         </div>
-        
-        <!-- 商品简介 -->
-        <p class="text-sm text-gray-300 line-clamp-2 mb-4 drop-shadow-sm">
-          {{ product.description || '探索这款精心挑选的独家好物，点击下方直接抢购。' }}
-        </p>
 
-        <!-- 抖音精髓：超大“一键加购/结账”按钮 -->
-        <div class="flex gap-2">
-          <UButton 
-            size="xl" 
-            block 
-            color="primary" 
-            class="font-bold tracking-wide rounded-xl shadow-lg shadow-primary/20"
-            @click="addToCart(product.databaseId || product.id, 1)"
-          >
-            <UIcon name="i-heroicons-shopping-cart" class="w-5 h-5 mr-2" />
-            加入购物车
-          </UButton>
-          
-          <NuxtLink :to="`/product/${product.slug}`" class="block">
-            <UButton size="xl" variant="soft" color="white" class="rounded-xl">
-              详情
-            </UButton>
-          </NuxtLink>
-        </div>
+        <button 
+          @click="handleAddToCart(product)"
+          class="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold tracking-wide rounded-xl shadow-lg transition-colors flex items-center justify-center gap-2 active:scale-[0.99]"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
+          </svg>
+          立即抢购
+        </button>
       </div>
     </div>
 
-    <!-- 首屏全局全屏加载状态 -->
+    <!-- 首屏全局加载占位 -->
     <div v-if="products.length === 0 && isLoading" class="w-full h-screen flex flex-col items-center justify-center bg-black">
-      <UIcon name="i-heroicons-arrow-path" class="animate-spin h-10 w-10 text-primary mb-4" />
-      <p class="text-gray-400 text-sm">正在为您生成专属好物推荐...</p>
+      <div class="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+      <p class="text-gray-400 text-sm tracking-wide">为您加载精选好物...</p>
+    </div>
+
+    <!-- 数据完全为空时的兜底提示 -->
+    <div v-if="products.length === 0 && !isLoading" class="w-full h-screen flex flex-col items-center justify-center bg-gray-950 px-6 text-center">
+      <p class="text-gray-400 mb-2">暂无推荐商品</p>
+      <p class="text-xs text-gray-600">请确保后端 WPGraphQL 插件运行正常且已同步商品</p>
     </div>
   </div>
 </template>
 
 <style scoped>
-/* 隐藏滚动条但保留滚动能力 */
+/* 隐藏滚动条 */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 0.9; }
+}
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
 }
 </style>
