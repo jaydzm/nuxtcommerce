@@ -11,49 +11,74 @@ const props = defineProps({
   }
 });
 
-// ============ 状态 ============
-const allProducts = ref([]);
+// 状态
+const productPages = ref([]);
+const pageInfo = ref({ hasNextPage: false, endCursor: '' });
 const loading = ref(false);
 const error = ref(null);
-const displayCount = ref(4); // 当前显示数量，每次加载+4
 const loadMoreTrigger = ref(null);
 
-// ============ 计算属性 ============
-// 当前显示的产品（前 N 个）
+// ============ 随机种子管理 ============
+// 每次调用都生成新的随机种子
+const getPageSeed = (pageIndex) => {
+  // 使用页面索引 + 当前时间戳作为种子，确保每次刷新都不同
+  const timestamp = Date.now();
+  return Math.floor((timestamp + pageIndex * 1000) % 99999) + 1;
+};
+
+// 可种子化的随机打乱
+const seededShuffle = (array, seed) => {
+  const result = [...array];
+  let m = result.length;
+  let s = seed;
+  
+  const nextRand = () => {
+    s = (s * 9301 + 49297) % 233280;
+    return s / 233280;
+  };
+  
+  while (m > 0) {
+    const i = Math.floor(nextRand() * m);
+    m--;
+    [result[m], result[i]] = [result[i], result[m]];
+  }
+  
+  return result;
+};
+
+// ============ 计算属性：合并所有页面并打乱 ============
 const products = computed(() => {
-  return allProducts.value.slice(0, displayCount.value);
-});
-
-// 是否还有更多
-const hasMore = computed(() => {
-  return displayCount.value < allProducts.value.length;
-});
-
-// 总产品数
-const totalCount = computed(() => {
-  return allProducts.value.length;
-});
-
-// 已加载数量
-const loadedCount = computed(() => {
-  return products.value.length;
+  // 对每一页独立打乱
+  const shuffledPages = productPages.value.map((page, index) => {
+    const seed = getPageSeed(index);
+    return seededShuffle(page, seed);
+  });
+  
+  // 合并所有页面
+  return shuffledPages.flat();
 });
 
 // ============ 加载函数 ============
-const fetchProducts = async () => {
+const fetchProducts = async (after = null) => {
   if (loading.value) return;
   loading.value = true;
   error.value = null;
 
   try {
     const query = new URLSearchParams();
+    if (after) query.append('after', after);
     if (props.categorySlug) query.append('category', props.categorySlug);
-    query.append('per_page', 100);
     
     const data = await $fetch(`/api/products?${query.toString()}`);
     
-    allProducts.value = data.products.nodes || [];
-    displayCount.value = 4; // 初始显示4个
+    const newProducts = data.products.nodes || [];
+    
+    if (after) {
+      productPages.value = [...productPages.value, newProducts];
+    } else {
+      productPages.value = [newProducts];
+    }
+    pageInfo.value = data.products.pageInfo;
   } catch (err) {
     error.value = err;
     console.error('加载产品失败:', err);
@@ -62,16 +87,10 @@ const fetchProducts = async () => {
   }
 };
 
-// ============ 加载更多（追加4个） ============
-const loadMore = () => {
-  if (!hasMore.value || loading.value) return;
-  displayCount.value += 4; // 每次追加4个
-};
-
-// ============ 重置 ============
+// ============ 重置并重新加载 ============
 const resetAndFetch = async () => {
-  allProducts.value = [];
-  displayCount.value = 4;
+  productPages.value = [];
+  pageInfo.value = { hasNextPage: false, endCursor: '' };
   await fetchProducts();
 };
 
@@ -83,9 +102,9 @@ watch(() => props.categorySlug, () => {
 // ============ 无限滚动 ============
 useInfiniteScroll(
   loadMoreTrigger,
-  () => {
-    if (hasMore.value && !loading.value) {
-      loadMore();
+  async () => {
+    if (pageInfo.value.hasNextPage && !loading.value) {
+      await fetchProducts(pageInfo.value.endCursor);
     }
   },
   { distance: 100 }
@@ -96,11 +115,10 @@ onMounted(() => {
   fetchProducts();
 });
 
-// ============ 暴露方法 ============
+// ============ 暴露方法给父组件 ============
 defineExpose({
   resetAndFetch,
-  fetchProducts,
-  loadMore
+  fetchProducts
 });
 </script>
 
@@ -119,18 +137,8 @@ defineExpose({
 
     <!-- 产品网格 -->
     <div v-else>
-      <!-- 显示加载进度 -->
-      <div v-if="totalCount > 0" class="flex justify-between items-center mb-4">
-        <span class="text-sm text-gray-500 dark:text-gray-400">
-          共 {{ totalCount }} 件商品
-        </span>
-        <span class="text-sm text-gray-500 dark:text-gray-400">
-          已加载 {{ loadedCount }}/{{ totalCount }}
-        </span>
-      </div>
-
       <div 
-        class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6"
+        class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 md:gap-6"
       >
         <!-- 实际产品卡片 -->
         <ProductCard 
@@ -140,9 +148,9 @@ defineExpose({
         />
         
         <!-- 骨架屏占位（首次加载） -->
-        <template v-if="loading && allProducts.length === 0">
+        <template v-if="loading && productPages.length === 0">
           <div
-            v-for="n in 4"
+            v-for="n in 12"
             :key="'skeleton-' + n"
             class="group select-none"
           >
@@ -164,28 +172,28 @@ defineExpose({
       <div 
         ref="loadMoreTrigger" 
         class="flex justify-center items-center py-8 min-h-[60px]"
-        :class="{ 'min-h-[80px]': hasMore }"
+        :class="{ 'min-h-[80px]': pageInfo.hasNextPage }"
       >
         <!-- 加载更多时的加载指示器 -->
-        <div v-if="loading && allProducts.length > 0" class="flex flex-col items-center gap-2">
+        <div v-if="loading && productPages.length > 0" class="flex flex-col items-center gap-2">
           <div class="w-6 h-6 border-2 border-gray-300 dark:border-gray-600 border-t-primary-600 dark:border-t-primary-400 rounded-full animate-spin"></div>
           <span class="text-sm text-gray-400 dark:text-gray-500">加载更多...</span>
         </div>
         
         <!-- 已加载全部 -->
         <span 
-          v-else-if="!hasMore && totalCount > 0" 
+          v-else-if="!pageInfo.hasNextPage && productPages.length > 0" 
           class="text-sm text-gray-400 dark:text-gray-500"
         >
-          — 已加载全部 {{ totalCount }} 件产品 —
+          — 已加载全部产品 ({{ productPages.reduce((acc, page) => acc + page.length, 0) }}件) —
         </span>
         
         <!-- 空状态 -->
         <span 
-          v-else-if="!loading && totalCount === 0" 
+          v-else-if="!loading && productPages.length === 0" 
           class="text-gray-400 dark:text-gray-500"
         >
-          暂无产品
+          口感快车高端茶样
         </span>
       </div>
     </div>
