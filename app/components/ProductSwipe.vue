@@ -104,8 +104,8 @@ const after = ref(null);
 const addingToCart = ref(false);
 
 const getProductImages = (product) => {
-  if (product.images?.nodes && product.images.nodes.length > 0) {
-    return product.images.nodes;
+  if (product.galleryImages?.nodes && product.galleryImages.nodes.length > 0) {
+    return product.galleryImages.nodes;
   }
   if (product.image) {
     return [product.image];
@@ -211,21 +211,35 @@ const onTouchEnd = () => {
   isSwiping = false;
 };
 
-// ========== 图片水平滑动 ==========
+// ========== 图片水平滑动（修复版） ==========
 let imageTouchStartX = 0;
+let imageTouchStartY = 0;
 let isImageSwiping = false;
 
 const onImageTouchStart = (e) => {
+  e.preventDefault();
   e.stopPropagation();
-  imageTouchStartX = e.touches[0].clientX;
+  
+  const touch = e.touches[0];
+  imageTouchStartX = touch.clientX;
+  imageTouchStartY = touch.clientY;
   isImageSwiping = true;
 };
 
 const onImageTouchMove = (e) => {
+  e.preventDefault();
   e.stopPropagation();
+  
   if (!isImageSwiping) return;
   
-  const deltaX = imageTouchStartX - e.touches[0].clientX;
+  const touch = e.touches[0];
+  const deltaX = imageTouchStartX - touch.clientX;
+  const deltaY = imageTouchStartY - touch.clientY;
+  
+  if (Math.abs(deltaX) < 30 || Math.abs(deltaX) < Math.abs(deltaY)) {
+    return;
+  }
+  
   const currentProduct = products.value[currentIndex.value];
   const images = getProductImages(currentProduct);
   if (!currentProduct || images.length === 0) return;
@@ -239,7 +253,9 @@ const onImageTouchMove = (e) => {
   }
 };
 
-const onImageTouchEnd = () => {
+const onImageTouchEnd = (e) => {
+  e.preventDefault();
+  e.stopPropagation();
   isImageSwiping = false;
 };
 
@@ -263,7 +279,6 @@ const onKeyDown = (e) => {
   checkPreload();
 };
 
-// ========== 鼠标滚轮 ==========
 const onWheel = (e) => {
   e.preventDefault();
   if (e.deltaY > 0 && currentIndex.value < products.value.length - 1) {
@@ -307,18 +322,20 @@ onMounted(() => {
   position: relative;
   overflow: hidden;
   background: #f5f5f5;
-  touch-action: pan-y;
+  touch-action: none;
 }
 
 .image-track {
   display: flex;
   height: 100%;
   transition: transform 0.3s ease;
+  touch-action: none;
 }
 
 .image-slide {
   min-width: 100%;
   height: 100%;
+  touch-action: none;
 }
 
 .image-slide img {
@@ -326,6 +343,9 @@ onMounted(() => {
   height: 100%;
   object-fit: contain;
   background: #f5f5f5;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .image-dots {
@@ -339,6 +359,8 @@ onMounted(() => {
   padding: 6px 12px;
   border-radius: 20px;
   backdrop-filter: blur(4px);
+  pointer-events: none;
+  z-index: 5;
 }
 
 .dot {
