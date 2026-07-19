@@ -3,7 +3,7 @@ import { gql } from 'graphql-request';
 
 export const getProductsQuery = gql`
   query getProducts($after: String, $search: String, $category: String, $order: OrderEnum!, $field: ProductsOrderByEnum!) {
-    products(first: 5, after: $after, where: { stockStatus: IN_STOCK, search: $search, category: $category, orderby: { field: $field, order: $order } }) {
+    products(first: 20, after: $after, where: { stockStatus: IN_STOCK, search: $search, category: $category, orderby: { field: $field, order: $order } }) {
       nodes {
         ... on VariableProduct {
           sku
