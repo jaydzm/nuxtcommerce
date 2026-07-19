@@ -3,20 +3,18 @@ import { gql, GraphQLClient } from 'graphql-request';
 
 export default cachedEventHandler(async (event) => {
   const query = getQuery(event);
-  
-  // 从 runtimeConfig 获取 GraphQL 端点
   const config = useRuntimeConfig();
   const endpoint = config.gqlHost || process.env.GQL_HOST || '';
-  
+
   if (!endpoint) {
     throw createError({
       statusCode: 500,
       statusMessage: 'GQL_HOST is not configured'
     });
   }
-  
+
   const client = new GraphQLClient(endpoint);
-  
+
   const graphqlQuery = gql`
     query GetSwipeProducts($first: Int, $after: String, $category: String) {
       products(
@@ -38,13 +36,13 @@ export default cachedEventHandler(async (event) => {
           description
           shortDescription
           image {
-            sourceUrl(size: LARGE)
+            sourceUrl  # ← 不加 size 参数，返回原始图片
             altText
             title
           }
           galleryImages(first: 20) {
             nodes {
-              sourceUrl(size: LARGE)
+              sourceUrl  # ← 不加 size 参数，返回原始图片
               altText
               title
             }
@@ -66,7 +64,6 @@ export default cachedEventHandler(async (event) => {
 
   try {
     const data = await client.request(graphqlQuery, variables);
-    
     return {
       products: {
         nodes: data.products.nodes,
