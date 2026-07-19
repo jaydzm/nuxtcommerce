@@ -12,6 +12,7 @@
       加载中...
     </div>
     
+    <!-- ===== 产品卡片（滑动区域） ===== -->
     <div
       v-for="(product, index) in products"
       :key="product.id"
@@ -69,21 +70,21 @@
         >
           ›
         </button>
-        
-        <!-- ===== 浮动信息层（在图片上方） ===== -->
-        <div class="product-overlay">
-          <div class="product-info">
-            <h2>{{ product.name }}</h2>
-            <p class="price">{{ product.price }}</p>
-            <button 
-              class="add-to-cart" 
-              @click.stop="addToCart(product)"
-              :disabled="addingToCart"
-            >
-              {{ addingToCart ? '添加中...' : '加入购物车' }}
-            </button>
-          </div>
-        </div>
+      </div>
+    </div>
+    
+    <!-- ===== 固定页脚（不随产品滑动） ===== -->
+    <div class="footer-overlay">
+      <div class="footer-info">
+        <h2>{{ currentProduct?.name || '' }}</h2>
+        <p class="price">{{ currentProduct?.price || '' }}</p>
+        <button 
+          class="add-to-cart" 
+          @click="addToCart(currentProduct)"
+          :disabled="addingToCart || !currentProduct"
+        >
+          {{ addingToCart ? '添加中...' : '加入购物车' }}
+        </button>
       </div>
     </div>
     
@@ -94,7 +95,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 
 const props = defineProps({
   categorySlug: {
@@ -103,6 +104,7 @@ const props = defineProps({
   }
 });
 
+// ========== 状态 ==========
 const products = ref([]);
 const currentIndex = ref(0);
 const imageIndex = ref(0);
@@ -111,18 +113,28 @@ const hasMore = ref(true);
 const after = ref(null);
 const addingToCart = ref(false);
 
+// ========== 当前产品 ==========
+const currentProduct = computed(() => {
+  return products.value[currentIndex.value] || null;
+});
+
+// ========== 获取产品图片 ==========
 const getProductImages = (product) => {
+  if (!product) return [];
+  // 优先使用画廊图片（多张）
   if (product.galleryImages?.nodes && product.galleryImages.nodes.length > 0) {
     return product.galleryImages.nodes;
   }
+  // 其次使用主图
   if (product.image) {
     return [product.image];
   }
   return [];
 };
 
+// ========== 添加到购物车 ==========
 const addToCart = async (product) => {
-  if (addingToCart.value) return;
+  if (!product || addingToCart.value) return;
   addingToCart.value = true;
   
   try {
@@ -139,6 +151,7 @@ const addToCart = async (product) => {
   }
 };
 
+// ========== 加载产品数据 ==========
 const fetchProducts = async () => {
   if (loading.value || !hasMore.value) return;
   loading.value = true;
@@ -151,7 +164,8 @@ const fetchProducts = async () => {
     query.append('orderby', 'DESC');
     query.append('fieldby', 'DATE');
     
-    const data = await $fetch(`/api/products?${query.toString()}`);
+    // 调用独立的滑动产品 API
+    const data = await $fetch(`/api/swipe-products?${query.toString()}`);
     const newProducts = data.products.nodes || [];
     
     products.value = [...products.value, ...newProducts];
@@ -164,9 +178,10 @@ const fetchProducts = async () => {
   }
 };
 
+// ========== 图片导航 ==========
 const nextImage = () => {
-  const currentProduct = products.value[currentIndex.value];
-  const images = getProductImages(currentProduct);
+  const product = currentProduct.value;
+  const images = getProductImages(product);
   if (imageIndex.value < images.length - 1) {
     imageIndex.value++;
   }
@@ -178,6 +193,7 @@ const prevImage = () => {
   }
 };
 
+// ========== 预加载检查 ==========
 const checkPreload = () => {
   if (currentIndex.value > products.value.length - 3 && hasMore.value && !loading.value) {
     fetchProducts();
@@ -230,7 +246,6 @@ const onImageTouchStart = (e) => {
 
 const onImageTouchMove = (e) => {
   e.stopPropagation();
-  
   if (!isImageSwiping) return;
   
   const touch = e.touches[0];
@@ -259,9 +274,8 @@ const onImageTouchMove = (e) => {
     return;
   }
   
-  const currentProduct = products.value[currentIndex.value];
-  const images = getProductImages(currentProduct);
-  if (!currentProduct || images.length === 0) return;
+  const images = getProductImages(currentProduct.value);
+  if (!currentProduct.value || images.length === 0) return;
   
   if (deltaX > 30 && imageIndex.value < images.length - 1) {
     imageIndex.value++;
@@ -298,6 +312,7 @@ const onKeyDown = (e) => {
   checkPreload();
 };
 
+// ========== 鼠标滚轮 ==========
 const onWheel = (e) => {
   e.preventDefault();
   if (e.deltaY > 0 && currentIndex.value < products.value.length - 1) {
@@ -310,6 +325,7 @@ const onWheel = (e) => {
   checkPreload();
 };
 
+// ========== 生命周期 ==========
 onMounted(() => {
   fetchProducts();
 });
@@ -324,6 +340,7 @@ onMounted(() => {
   background: #000;
 }
 
+/* ===== 产品卡片 ===== */
 .product-card {
   position: absolute;
   top: 0;
@@ -336,7 +353,6 @@ onMounted(() => {
   background: #000;
 }
 
-/* ===== 图片轮播：全屏 ===== */
 .product-image-carousel {
   flex: 1;
   position: relative;
@@ -372,7 +388,7 @@ onMounted(() => {
 /* ===== 图片指示器 ===== */
 .image-dots {
   position: absolute;
-  bottom: 120px;
+  bottom: 140px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -399,7 +415,7 @@ onMounted(() => {
   border-radius: 4px;
 }
 
-/* ===== 箭头 ===== */
+/* ===== 左右箭头 ===== */
 .arrow {
   position: absolute;
   top: 50%;
@@ -435,28 +451,28 @@ onMounted(() => {
   }
 }
 
-/* ===== 浮动信息层（在图片上方） ===== */
-.product-overlay {
-  position: absolute;
+/* ===== 固定底部信息层 ===== */
+.footer-overlay {
+  position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 30px 24px 50px;
-  background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%);
+  padding: 30px 24px 40px;
+  background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
   pointer-events: none;
-  z-index: 3;
+  z-index: 20;
 }
 
-.product-overlay * {
+.footer-overlay * {
   pointer-events: auto;
 }
 
-.product-info {
+.footer-info {
   max-width: 500px;
   margin: 0 auto;
 }
 
-.product-info h2 {
+.footer-info h2 {
   font-size: 22px;
   font-weight: 600;
   margin: 0 0 6px;
@@ -464,7 +480,7 @@ onMounted(() => {
   text-shadow: 0 2px 10px rgba(0,0,0,0.5);
 }
 
-.product-info .price {
+.footer-info .price {
   font-size: 26px;
   font-weight: bold;
   color: #ffd700;
