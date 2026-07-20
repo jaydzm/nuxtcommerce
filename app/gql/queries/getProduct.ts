@@ -4,7 +4,7 @@ import { gql } from 'graphql-request';
 export const getProductQuery = gql`
   query getProduct($slug: ID!, $sku: String!) {
     product(id: $slug, idType: SLUG) {
-      ... on SimpleProduct {
+      ... on VariableProduct {
         databaseId
         sku
         slug
@@ -12,10 +12,6 @@ export const getProductQuery = gql`
         regularPrice
         salePrice
         description
-        shortDescription
-        stockStatus
-        stockQuantity
-        manageStock
         image {
           sourceUrl(size: LARGE)
         }
@@ -24,27 +20,58 @@ export const getProductQuery = gql`
             sourceUrl(size: LARGE)
           }
         }
-        categories {
-          nodes {
-            name
-            slug
-          }
-        }
-        tags {
+        allPaColor {
           nodes {
             name
           }
         }
-        averageRating
-        reviewCount
+        allPaStyle {
+          nodes {
+            name
+          }
+        }
+        productTypes {
+          nodes {
+            products(where: { stockStatus: IN_STOCK, search: $sku }) {
+              nodes {
+                slug
+                image {
+                  sourceUrl(size: WOOCOMMERCE_THUMBNAIL)
+                }
+                allPaColor {
+                  nodes {
+                    name
+                  }
+                }
+              }
+            }
+          }
+        }
+        variations(where: { orderby: { field: NAME, order: DESC } }) {
+          nodes {
+            databaseId
+            stockStatus
+            stockQuantity
+            attributes {
+              nodes {
+                value
+              }
+            }
+          }
+        }
         related(first: 50) {
           nodes {
-            ... on SimpleProduct {
+            ... on VariableProduct {
               sku
               slug
               name
               regularPrice
               salePrice
+              allPaStyle {
+                nodes {
+                  name
+                }
+              }
               image {
                 sourceUrl(size: WOOCOMMERCE_THUMBNAIL)
               }
