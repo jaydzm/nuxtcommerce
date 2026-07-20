@@ -7,9 +7,17 @@ const totalQuantity = computed(() => cart.value.reduce((s, i) => s + (i.quantity
 
 const cartTotal = computed(() => {
   const total = cart.value.reduce((accumulator, item) => {
-    const node = item.variation.node;
-    const regularPrice = parseFloat(node.regularPrice) || 0;
-    const salePrice = parseFloat(node.salePrice) || 0;
+    // 改为直接读取主商品节点数据
+    const node = item.product?.node;
+    if (!node) return accumulator;
+
+    // 清理可能存在的货币符号，解析纯数字
+    const rawRegular = String(node.regularPrice || '0').replace(/[^0-9.]/g, '');
+    const rawSale = String(node.salePrice || '0').replace(/[^0-9.]/g, '');
+
+    const regularPrice = parseFloat(rawRegular) || 0;
+    const salePrice = parseFloat(rawSale) || 0;
+
     const priceToUse = salePrice > 0 && salePrice < regularPrice ? salePrice : regularPrice;
     return accumulator + priceToUse * (item.quantity ?? 1);
   }, 0);
@@ -24,25 +32,17 @@ const cartTotal = computed(() => {
     <form @submit.prevent="handleCheckout" class="flex flex-col items-center justify-center">
       <div class="grid grid-cols-2 gap-3 billing w-full">
         
-
-        
         <div class="col-span-full">
           <input required v-model="userDetails.firstName" :placeholder="$t('checkout.form.first_name')" name="first-name" type="text" />
         </div>
         <div class="col-span-full">
           <input required v-model="userDetails.phone" :placeholder="$t('checkout.form.phone')" name="phone" type="text" />
         </div>
-     
+      
         <div class="col-span-full">
           <textarea required v-model="userDetails.address1" :placeholder="$t('checkout.form.address')" name="address" rows="2"></textarea>
         </div>
 
-
-
-
-
-
-        
       </div>
       <div class="text-sm font-semibold p-4 text-neutral-600 dark:text-neutral-400">
         {{
