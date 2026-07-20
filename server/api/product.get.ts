@@ -1,7 +1,6 @@
 // server/api/product.get.ts
 import { requestQuery } from '~~/server/utils/wpgraphql';
 
-// 包含完整图片字段的 GraphQL 查询
 const getProductQuery = /* GraphQL */ `
   query getProduct($slug: ID!) {
     product(id: $slug, idType: SLUG) {
@@ -35,6 +34,11 @@ const getProductQuery = /* GraphQL */ `
         salePrice
         stockQuantity
         stockStatus
+      }
+      ... on VariableProduct {
+        price
+        regularPrice
+        salePrice
       }
     }
   }
