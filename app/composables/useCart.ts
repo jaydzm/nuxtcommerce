@@ -28,7 +28,12 @@ export const useCart = () => {
         method: 'POST',
         body: { productId },
       });
-      const incoming = response.addToCart.cartItem;
+
+      const incoming = response?.addToCart?.cartItem;
+      if (!incoming) {
+        throw new Error('未获取到有效的购物车商品响应');
+      }
+
       const itemIndex = cart.value.findIndex(item => item.key === incoming.key);
 
       if (itemIndex >= 0) {
@@ -43,9 +48,23 @@ export const useCart = () => {
       setTimeout(() => {
         addToCartButtonStatus.value = 'add';
       }, 2000);
-    } catch {
+    } catch (error: any) {
       addToCartButtonStatus.value = 'add';
-      push.error('Insufficient stock');
+      
+      // 1. 打印真实错误日志，方便在 Console 中调试
+      console.error('[Add To Cart Error]:', error);
+
+      // 2. 解析真实的错误信息，不要把网络/跨域/Cookie错误误判为“库存不足”
+      const serverMessage = error?.data?.message || error?.message || '';
+      
+      if (serverMessage.toLowerCase().includes('stock')) {
+        push.error('库存不足');
+      } else if (serverMessage) {
+        // 弹出真实的接口或网络错误提示，方便一眼看出根因
+        push.error(`添加失败: ${serverMessage}`);
+      } else {
+        push.error('网络请求异常，请稍后重试');
+      }
     }
   };
 
@@ -56,9 +75,13 @@ export const useCart = () => {
         : cart.value.map(item => (item.key === key ? { ...item, quantity } : item));
 
     setCart(next);
+    
+    // 发送更新逻辑，增加错误捕获避免静默失败
     void $fetch('/api/cart/update', {
       method: 'POST',
       body: { items: [{ key, quantity }] },
+    }).catch(err => {
+      console.error('[Update Cart Error]:', err);
     });
   };
 
@@ -70,9 +93,13 @@ export const useCart = () => {
       return;
     }
 
-    const maxStock = item.variation?.node?.stockQuantity;
-    if (typeof maxStock === 'number' && item.quantity >= maxStock) {
-      push.error('Insufficient stock');
+    // 防护 1：强转数字，防止 localStorage 恢复出的 stockQuantity 是字符串类型
+    const rawStock = item.variation?.node?.stockQuantity;
+    const maxStock = typeof rawStock === 'number' ? rawStock : Number(rawStock);
+
+    // 防护 2：只有在 maxStock 是合法的正整数时，才拦截数量
+    if (!isNaN(maxStock) && maxStock > 0 && item.quantity >= maxStock) {
+      push.error('库存不足');
       return;
     }
 
@@ -93,7 +120,8 @@ export const useCart = () => {
     try {
       const parsed = JSON.parse(raw) as CartItem[];
       setCart(Array.isArray(parsed) ? parsed : []);
-    } catch {
+    } catch (e) {
+      console.error('[Cart LocalStorage Parse Error]:', e);
       setCart([]);
     }
   });
