@@ -104,11 +104,40 @@ const { handleAddToCart, addToCartButtonStatus } = useCart();
             <h1 class="text-2xl font-semibold mb-1">{{ product.name }}</h1>
             <ProductPrice :sale-price="product.salePrice" :regular-price="product.regularPrice" />
           </div>
-          
+          <div class="flex gap-2 px-3 lg:px-0" v-for="(variation, i) in product.productTypes?.nodes" :key="i">
+            <div v-for="(vars, i) in variation.products.nodes" :key="i">
+              <NuxtLink
+                :to="localePath(`/product/${vars.slug}-${product.sku.split('-')[0]}`)"
+                :class="[
+                  'flex w-12 rounded-lg border-2 select-varitaion transition-all duration-200 bg-neutral-200 dark:bg-neutral-800',
+                  vars.allPaColor.nodes[0].name === product.allPaColor.nodes[0].name ? 'selected-varitaion' : 'border-[#9b9b9b] dark:border-[#8c8c8c]',
+                ]">
+                <NuxtImg
+                  :alt="vars.allPaColor.nodes[0].name"
+                  :src="vars.image.sourceUrl"
+                  :title="vars.allPaColor.nodes[0].name"
+                  class="rounded-md border-2 border-white dark:border-black" />
+              </NuxtLink>
+            </div>
+          </div>
 
           <div class="pb-4 px-3 lg:px-0 border-b border-[#efefef] dark:border-[#262626]">
-            
-            
+            <div class="text-sm font-semibold leading-5 opacity-50 flex gap-1">
+              {{ $t('product.size') }}:
+              <div class="uppercase">{{ selectedVariation.attributes.nodes.map(attr => attr.value).toString() }}</div>
+            </div>
+            <div class="flex gap-2 mt-2 mb-4 flex-wrap">
+              <label
+                class="py-1 px-3 rounded-md cursor-pointer select-varitaion border-2 border-[#9b9b9b] dark:border-[#8c8c8c] transition-all duration-200"
+                v-for="variation in sortedVariations"
+                :key="variation.databaseId"
+                :class="[variation.stockStatus === 'OUT_OF_STOCK' ? 'disabled' : '', selectedVariation.databaseId === variation.databaseId ? 'selected-varitaion' : '']">
+                <input type="radio" class="hidden" name="variation" :value="variation" :disabled="variation.stockStatus === 'OUT_OF_STOCK'" v-model="selectedVariation" />
+                <span class="font-semibold uppercase" :title="`Size: ${variation.attributes.nodes.map(attr => attr.value).toString()}`">
+                  {{ variation.attributes.nodes.map(attr => attr.value).toString() }}
+                </span>
+              </label>
+            </div>
             <div class="flex">
               <button
                 @click="handleAddToCart(selectedVariation.databaseId)"
@@ -131,7 +160,7 @@ const { handleAddToCart, addToCartButtonStatus } = useCart();
                   {{ $t('product.free_return') }}
                   <a class="underline" href="#">{{ $t('product.information') }}</a>
                 </li>
-                
+                <li>{{ $t('product.sku') }}: {{ product.sku }}</li>
                 <div v-html="product.description"></div>
               </ul>
             </div>
@@ -140,15 +169,11 @@ const { handleAddToCart, addToCartButtonStatus } = useCart();
       </div>
     </div>
   </div>
-
-   <div class="mt-12 px-3">
-    <h2 class="text-xl font-semibold mb-6">您可能还喜欢</h2>
-    <!-- 关键：传入当前产品的分类，显示同类产品 -->
-    <ProductList :categorySlug="product?.categories?.nodes?.[0]?.slug || ''" />
+  <div class="text-lg lg:text-xl lg:text-center font-semibold mt-4 pt-4 px-3 border-t border-[#efefef] dark:border-[#262626] lg:border-none">{{ $t('product.shop_similar') }}</div>
+  <div class="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 3xl:grid-cols-7 gap-4 px-3 lg:px-5 xl:px-8 mt-4 lg:mt-5">
+    <ProductCard :products="product.related?.nodes" />
+    <ProductsSkeleton v-if="!product.name" />
   </div>
-
-
-  
 </template>
 
 <style lang="postcss">
@@ -182,13 +207,11 @@ const { handleAddToCart, addToCartButtonStatus } = useCart();
 }
 
 .button-bezel {
-  box-shadow: 0 0 0 var(--button-outline, 0px) rgba(7, 193, 96, 0.3), inset 0 -1px 1px 0 rgba(0, 0, 0, 0.25), inset 0 1px 0 0 rgba(255, 255, 255, 0.3),
+  box-shadow: 0 0 0 var(--button-outline, 0px) rgb(222, 92, 92, 0.3), inset 0 -1px 1px 0 rgba(0, 0, 0, 0.25), inset 0 1px 0 0 rgba(255, 255, 255, 0.3),
     0 1px 2px 0 rgba(0, 0, 0, 0.5);
-  @apply outline-none tracking-[-0.125px] transition scale-[var(--button-scale,1)] duration-200;
-  background-color: #07c160; 
-  
+  @apply bg-alizarin-crimson-700 outline-none tracking-[-0.125px] transition scale-[var(--button-scale,1)] duration-200;
   &:hover {
-    background-color: #06ad56;
+    @apply bg-alizarin-crimson-600;
   }
   &:active {
     --button-outline: 4px;
