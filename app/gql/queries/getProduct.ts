@@ -1,88 +1,57 @@
-// app/gql/queries/getProduct.ts
+// app/gql/queries/getProducts.ts
 import { gql } from 'graphql-request';
 
-export const getProductQuery = gql`
-  query getProduct($slug: ID!, $sku: String!) {
-    product(id: $slug, idType: SLUG) {
-      ... on VariableProduct {
-        databaseId
-        sku
-        slug
-        name
-        regularPrice
-        salePrice
-        description
-        image {
-          sourceUrl(size: LARGE)
-        }
-        galleryImages {
-          nodes {
-            sourceUrl(size: LARGE)
+export const getProductsQuery = gql`
+  query getProducts($after: String, $search: String, $category: String, $order: OrderEnum!, $field: ProductsOrderByEnum!) {
+    products(first: 20, after: $after, where: { 
+      stockStatus: IN_STOCK, 
+      search: $search, 
+      category: $category, 
+      orderby: { field: $field, order: $order }
+    }) {
+      nodes {
+        ... on SimpleProduct {
+          sku
+          slug
+          name
+          regularPrice
+          salePrice
+          image {
+            sourceUrl(size: WOOCOMMERCE_THUMBNAIL)
           }
-        }
-        allPaColor {
-          nodes {
-            name
-          }
-        }
-        allPaStyle {
-          nodes {
-            name
-          }
-        }
-        productTypes {
-          nodes {
-            products(where: { stockStatus: IN_STOCK, search: $sku }) {
-              nodes {
-                slug
-                image {
-                  sourceUrl(size: WOOCOMMERCE_THUMBNAIL)
-                }
-                allPaColor {
-                  nodes {
-                    name
-                  }
-                }
-              }
+          galleryImages {
+            nodes {
+              sourceUrl(size: WOOCOMMERCE_THUMBNAIL)
             }
           }
+          stockQuantity
+          manageStock
         }
-        variations(where: { orderby: { field: NAME, order: DESC } }) {
-          nodes {
-            databaseId
-            stockStatus
-            stockQuantity
-            attributes {
-              nodes {
-                value
-              }
+        ... on VariableProduct {
+          sku
+          slug
+          name
+          regularPrice
+          salePrice
+          image {
+            sourceUrl(size: WOOCOMMERCE_THUMBNAIL)
+          }
+          galleryImages {
+            nodes {
+              sourceUrl(size: WOOCOMMERCE_THUMBNAIL)
             }
           }
+          # 保留最少量的变体信息，如果需要可以取消注释
+          # allPaStyle {
+          #   nodes {
+          #     name
+          #   }
+          # }
         }
-        related(first: 50) {
-          nodes {
-            ... on VariableProduct {
-              sku
-              slug
-              name
-              regularPrice
-              salePrice
-              allPaStyle {
-                nodes {
-                  name
-                }
-              }
-              image {
-                sourceUrl(size: WOOCOMMERCE_THUMBNAIL)
-              }
-              galleryImages {
-                nodes {
-                  sourceUrl(size: WOOCOMMERCE_THUMBNAIL)
-                }
-              }
-            }
-          }
-        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
       }
     }
   }
