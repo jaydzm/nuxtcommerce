@@ -23,7 +23,6 @@ const sku = parts.pop();
 const slug = parts.join('-');
 
 const productResult = ref({});
-const selectedVariation = ref(null);
 
 onMounted(() => {
   $fetch('/api/product', {
@@ -32,24 +31,6 @@ onMounted(() => {
 });
 
 const product = computed(() => productResult.value);
-
-const sizeOrder = ['xxs', 'xs', 's', 'm', 'l', 'xl', '2xl', '23-24', '25', '26-27', '28-29', '30', '31-32', '33', '34-25'];
-
-const sortedVariations = computed(() => {
-  if (!product.value.variations?.nodes) return [];
-  return product.value.variations.nodes.slice().sort((a, b) => {
-    const aSize = a.attributes.nodes[0].value.toLowerCase();
-    const bSize = b.attributes.nodes[0].value.toLowerCase();
-    return sizeOrder.indexOf(aSize) - sizeOrder.indexOf(bSize);
-  });
-});
-
-watchEffect(() => {
-  if (sortedVariations.value.length > 0) {
-    const variationInStock = sortedVariations.value.find(variation => variation.stockStatus === 'IN_STOCK');
-    selectedVariation.value = variationInStock ? variationInStock : null;
-  }
-});
 
 const { handleAddToCart, addToCartButtonStatus } = useCart();
 </script>
@@ -104,15 +85,13 @@ const { handleAddToCart, addToCartButtonStatus } = useCart();
             <h1 class="text-2xl font-semibold mb-1">{{ product.name }}</h1>
             <ProductPrice :sale-price="product.salePrice" :regular-price="product.regularPrice" />
           </div>
-          
 
           <div class="pb-4 px-3 lg:px-0 border-b border-[#efefef] dark:border-[#262626]">
-            
-            
             <div class="flex">
+              <!-- 加购按钮：直接传入主商品 databaseId -->
               <button
-                @click="handleAddToCart(selectedVariation.databaseId)"
-                :disabled="addToCartButtonStatus !== 'add'"
+                @click="product.databaseId && handleAddToCart(product.databaseId)"
+                :disabled="addToCartButtonStatus !== 'add' || !product.databaseId"
                 class="button-bezel w-full h-12 rounded-md relative tracking-wide font-semibold text-white text-sm flex justify-center items-center">
                 <Transition name="slide-up">
                   <div v-if="addToCartButtonStatus === 'add'" class="absolute">{{ $t('cart.add_to_cart') }}</div>
@@ -141,14 +120,11 @@ const { handleAddToCart, addToCartButtonStatus } = useCart();
     </div>
   </div>
 
-   <div class="mt-12 px-3">
+  <div class="mt-12 px-3">
     <h2 class="text-xl font-semibold mb-6">您可能还喜欢</h2>
-    <!-- 关键：传入当前产品的分类，显示同类产品 -->
+    <!-- 传入当前产品的分类，显示同类产品 -->
     <ProductList :categorySlug="product?.categories?.nodes?.[0]?.slug || ''" />
   </div>
-
-
-  
 </template>
 
 <style lang="postcss">
@@ -170,11 +146,6 @@ const { handleAddToCart, addToCartButtonStatus } = useCart();
 
 .swiper-pagination {
   @apply bg-white/50 shadow-sm rounded-full py-1 backdrop-blur-sm;
-}
-
-.selected-varitaion,
-.select-varitaion:hover:not(.disabled) {
-  @apply border-alizarin-crimson-700 dark:border-alizarin-crimson-700 text-alizarin-crimson-700 bg-red-700/10;
 }
 
 .disabled {
