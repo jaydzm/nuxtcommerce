@@ -1,7 +1,7 @@
 // server/api/product.get.ts
 import { requestQuery } from '~~/server/utils/wpgraphql';
 
-// 单一商品的 GraphQL 查询语句
+// 包含完整图片字段的 GraphQL 查询
 const getProductQuery = /* GraphQL */ `
   query getProduct($slug: ID!) {
     product(id: $slug, idType: SLUG) {
@@ -10,12 +10,17 @@ const getProductQuery = /* GraphQL */ `
       slug
       description
       shortDescription
+      sku
       image {
         sourceUrl
+        altText
+        title
       }
       galleryImages {
         nodes {
           sourceUrl
+          altText
+          title
         }
       }
       categories {
@@ -37,7 +42,8 @@ const getProductQuery = /* GraphQL */ `
 
 export default cachedEventHandler(
   async event => {
-    const { slug } = getQuery(event) as { slug?: string; sku?: string };
+    const query = getQuery(event);
+    const slug = query.slug as string;
 
     if (!slug) {
       throw createError({
