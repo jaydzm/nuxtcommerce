@@ -7,7 +7,7 @@ const props = defineProps({
 
 const images = computed(() => {
   const mainImage = props.product?.image?.sourceUrl ? [props.product.image.sourceUrl] : [];
-  const additionalImages = props.product?.galleryImages?.nodes?.map((image: any) => image.sourceUrl) || [];
+  const additionalImages = props.product?.galleryImages?.nodes.map((image: any) => image.sourceUrl) || [];
   return mainImage.concat(additionalImages);
 });
 </script>
