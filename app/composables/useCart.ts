@@ -2,8 +2,34 @@ import { push } from 'notivue';
 
 const CART_STORAGE_KEY = 'cart';
 
+// 单一商品架构下的 CartItem 接口定义
+export interface SimpleCartItem {
+  key: string;
+  quantity: number;
+  product: {
+    node: {
+      databaseId: number;
+      name: string;
+      image?: {
+        sourceUrl: string;
+      };
+      regularPrice?: string;
+      salePrice?: string;
+      stockQuantity?: number;
+    };
+  };
+}
+
+export interface AddToCartResponse {
+  addToCart?: {
+    cartItem?: SimpleCartItem;
+  };
+}
+
+export type AddBtnStatus = 'add' | 'loading' | 'added';
+
 export const useCart = () => {
-  const cart = useState<CartItem[]>('cart', () => []);
+  const cart = useState<SimpleCartItem[]>('cart', () => []);
   const addToCartButtonStatus = ref<AddBtnStatus>('add');
 
   const persistCart = () => {
@@ -11,27 +37,34 @@ export const useCart = () => {
     localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart.value));
   };
 
-  const setCart = (items: CartItem[]) => {
+  const setCart = (items: SimpleCartItem[]) => {
     cart.value = items;
     persistCart();
   };
 
-  const findItem = (variationId: number) => {
-    return cart.value.find(item => item.variation?.node?.databaseId === variationId);
+  // 统一改为通过主商品的 databaseId (productId) 查找
+  const findItem = (productId: number) => {
+    return cart.value.find(item => item.product?.node?.databaseId === productId);
   };
 
-  const handleAddToCart = async (productId: number) => {
+  const handleAddToCart = async (productId: number, quantity: number = 1) => {
+    const numId = Number(productId);
+    if (!numId || isNaN(numId)) {
+      push.error('Invalid Product ID');
+      return;
+    }
+
     addToCartButtonStatus.value = 'loading';
 
     try {
       const response = await $fetch<AddToCartResponse>('/api/cart/add', {
         method: 'POST',
-        body: { productId },
+        body: { productId: numId, quantity },
       });
 
       const incoming = response?.addToCart?.cartItem;
       if (!incoming) {
-        throw new Error('未获取到有效的购物车商品响应');
+        throw new Error('No valid cart item returned');
       }
 
       const itemIndex = cart.value.findIndex(item => item.key === incoming.key);
@@ -50,20 +83,16 @@ export const useCart = () => {
       }, 2000);
     } catch (error: any) {
       addToCartButtonStatus.value = 'add';
-      
-      // 1. 打印真实错误日志，方便在 Console 中调试
-      console.error('[Add To Cart Error]:', error);
+      console.error('[Add to Cart Failed]:', error);
 
-      // 2. 解析真实的错误信息，不要把网络/跨域/Cookie错误误判为“库存不足”
+      // 解析真实的服务器错误，不再盲目归类为库存不足
       const serverMessage = error?.data?.message || error?.message || '';
-      
       if (serverMessage.toLowerCase().includes('stock')) {
-        push.error('库存不足');
+        push.error('Insufficient stock');
       } else if (serverMessage) {
-        // 弹出真实的接口或网络错误提示，方便一眼看出根因
-        push.error(`添加失败: ${serverMessage}`);
+        push.error(`Failed: ${serverMessage}`);
       } else {
-        push.error('网络请求异常，请稍后重试');
+        push.error('Network error, please try again');
       }
     }
   };
@@ -75,39 +104,37 @@ export const useCart = () => {
         : cart.value.map(item => (item.key === key ? { ...item, quantity } : item));
 
     setCart(next);
-    
-    // 发送更新逻辑，增加错误捕获避免静默失败
+
     void $fetch('/api/cart/update', {
       method: 'POST',
       body: { items: [{ key, quantity }] },
-    }).catch(err => {
+    }).catch((err) => {
       console.error('[Update Cart Error]:', err);
     });
   };
 
-  const increment = (variationId: number) => {
-    const item = findItem(variationId);
+  const increment = (productId: number) => {
+    const item = findItem(productId);
 
     if (!item) {
-      void handleAddToCart(variationId);
+      void handleAddToCart(productId);
       return;
     }
 
-    // 防护 1：强转数字，防止 localStorage 恢复出的 stockQuantity 是字符串类型
-    const rawStock = item.variation?.node?.stockQuantity;
+    // 从主商品节点获取库存
+    const rawStock = item.product?.node?.stockQuantity;
     const maxStock = typeof rawStock === 'number' ? rawStock : Number(rawStock);
 
-    // 防护 2：只有在 maxStock 是合法的正整数时，才拦截数量
     if (!isNaN(maxStock) && maxStock > 0 && item.quantity >= maxStock) {
-      push.error('库存不足');
+      push.error('Insufficient stock');
       return;
     }
 
     changeQuantity(item.key, item.quantity + 1);
   };
 
-  const decrement = (variationId: number) => {
-    const item = findItem(variationId);
+  const decrement = (productId: number) => {
+    const item = findItem(productId);
     if (!item) return;
     changeQuantity(item.key, item.quantity - 1);
   };
@@ -118,10 +145,10 @@ export const useCart = () => {
     if (!raw) return;
 
     try {
-      const parsed = JSON.parse(raw) as CartItem[];
+      const parsed = JSON.parse(raw);
       setCart(Array.isArray(parsed) ? parsed : []);
     } catch (e) {
-      console.error('[Cart LocalStorage Parse Error]:', e);
+      console.error('[Parse Cart Storage Error]:', e);
       setCart([]);
     }
   });
