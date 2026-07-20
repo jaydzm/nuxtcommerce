@@ -18,49 +18,37 @@ const modules = [Navigation, Pagination, Thumbs];
 
 const route = useRoute();
 const id = computed(() => route.params.id);
-
-// 提取 slug (兼顾带 SKU 和不带 SKU 的 URL 结构)
-const slug = computed(() => {
-  if (!id.value) return '';
-  const parts = id.value.split('-');
-  if (parts.length > 1) {
-    parts.pop(); // 移除最后的 SKU 尾缀
-    return parts.join('-');
-  }
-  return id.value;
-});
+const parts = id.value.split('-');
+const sku = parts.pop();
+const slug = parts.join('-');
 
 const productResult = ref({});
+const selectedVariation = ref(null);
 
-// 监听 slug 自动获取商品数据
-watch(
-  slug,
-  async (newSlug) => {
-    if (!newSlug) return;
-    try {
-      const data = await $fetch('/api/product', { query: { slug: newSlug } });
-      productResult.value = data?.product || {};
-    } catch (e) {
-      console.error('[Fetch Product Error]:', e);
-    }
-  },
-  { immediate: true }
-);
+onMounted(() => {
+  $fetch('/api/product', {
+    query: { slug, sku },
+  }).then(data => (productResult.value = data.product));
+});
 
 const product = computed(() => productResult.value);
 
-// 主图安全提取（多层回退保护）
-const mainImageUrl = computed(() => {
-  return (
-    product.value?.image?.sourceUrl ||
-    product.value?.galleryImages?.nodes?.[0]?.sourceUrl ||
-    '/placeholder.png'
-  );
+const sizeOrder = ['xxs', 'xs', 's', 'm', 'l', 'xl', '2xl', '23-24', '25', '26-27', '28-29', '30', '31-32', '33', '34-25'];
+
+const sortedVariations = computed(() => {
+  if (!product.value.variations?.nodes) return [];
+  return product.value.variations.nodes.slice().sort((a, b) => {
+    const aSize = a.attributes.nodes[0].value.toLowerCase();
+    const bSize = b.attributes.nodes[0].value.toLowerCase();
+    return sizeOrder.indexOf(aSize) - sizeOrder.indexOf(bSize);
+  });
 });
 
-// 相册图安全提取
-const galleryImagesList = computed(() => {
-  return product.value?.galleryImages?.nodes || [];
+watchEffect(() => {
+  if (sortedVariations.value.length > 0) {
+    const variationInStock = sortedVariations.value.find(variation => variation.stockStatus === 'IN_STOCK');
+    selectedVariation.value = variationInStock ? variationInStock : null;
+  }
 });
 
 const { handleAddToCart, addToCartButtonStatus } = useCart();
@@ -71,28 +59,19 @@ const { handleAddToCart, addToCartButtonStatus } = useCart();
   <ProductSkeleton v-if="!product.name" />
   <div v-else class="justify-center flex flex-col lg:flex-row lg:mx-5">
     <ButtonBack />
-    <!-- 缩略图侧边栏（大屏） -->
     <div class="mr-6 mt-5 pt-2.5 max-xl:hidden">
       <swiper :modules="modules" @swiper="setThumbsSwiper" class="product-images-thumbs w-14">
         <swiper-slide class="cursor-pointer rounded-xl overflow-hidden border-2 border-white dark:border-black">
           <NuxtImg
             :alt="product.name"
-            class="h-full w-full border-2 border-white bg-neutral-200 dark:bg-neutral-800 dark:border-black rounded-[10px] object-cover"
-            :src="mainImageUrl" />
+            class="h-full w-full border-2 border-white bg-neutral-200 dark:bg-neutral-800 dark:border-black rounded-[10px]"
+            :src="product.image?.sourceUrl" />
         </swiper-slide>
-        <swiper-slide 
-          class="cursor-pointer rounded-xl overflow-hidden border-2 border-white dark:border-black" 
-          v-for="(node, i) in galleryImagesList" 
-          :key="i">
-          <NuxtImg 
-            :alt="product.name" 
-            class="h-full w-full border-2 border-white bg-neutral-200 dark:bg-neutral-800 dark:border-black rounded-[10px] object-cover" 
-            :src="node.sourceUrl || '/placeholder.png'" />
+        <swiper-slide class="cursor-pointer rounded-xl overflow-hidden border-2 border-white dark:border-black" v-for="(node, i) in product.galleryImages?.nodes" :key="i">
+          <NuxtImg :alt="product.name" class="h-full w-full border-2 border-white bg-neutral-200 dark:bg-neutral-800 dark:border-black rounded-[10px]" :src="node.sourceUrl" />
         </swiper-slide>
       </swiper>
     </div>
-
-    <!-- 主轮播图区域 -->
     <div
       class="flex lg:p-5 lg:gap-5 flex-col lg:flex-row lg:border lg:border-transparent lg:dark:border-[#262626] lg:rounded-[32px] lg:shadow-[0_1px_20px_rgba(0,0,0,.15)] lg:mt-2.5 select-none">
       <div class="relative">
@@ -111,33 +90,29 @@ const { handleAddToCart, addToCartButtonStatus } = useCart();
           :thumbs="{ swiper: thumbsSwiper }"
           class="lg:w-[530px] lg:h-[530px] xl:w-[600px] xl:h-[600px] lg:rounded-2xl">
           <swiper-slide @click="isOpenImageSliderModal = true">
-            <NuxtImg :alt="product.name" class="h-full w-full bg-neutral-200 dark:bg-neutral-800 object-cover" :src="mainImageUrl" />
+            <NuxtImg :alt="product.name" class="h-full w-full bg-neutral-200 dark:bg-neutral-800" :src="product.image?.sourceUrl" />
           </swiper-slide>
-          <swiper-slide 
-            @click="isOpenImageSliderModal = true" 
-            v-for="(node, i) in galleryImagesList" 
-            :key="i">
-            <NuxtImg :alt="product.name" class="h-full w-full bg-neutral-200 dark:bg-neutral-800 object-cover" :src="node.sourceUrl || '/placeholder.png'" />
+          <swiper-slide @click="isOpenImageSliderModal = true" v-for="(node, i) in product.galleryImages?.nodes" :key="i">
+            <NuxtImg :alt="product.name" class="h-full w-full bg-neutral-200 dark:bg-neutral-800" :src="node.sourceUrl" />
           </swiper-slide>
         </swiper>
       </div>
-
       <ImageSliderWithModal :product="product" v-model="isOpenImageSliderModal" />
-
-      <!-- 商品基本信息 -->
       <div class="w-full lg:max-w-[28rem]">
         <div class="flex-col flex gap-4 lg:max-h-[530px] xl:max-h-[600px] overflow-hidden">
           <div class="p-3 lg:pb-4 lg:p-0 border-b border-[#efefef] dark:border-[#262626]">
             <h1 class="text-2xl font-semibold mb-1">{{ product.name }}</h1>
             <ProductPrice :sale-price="product.salePrice" :regular-price="product.regularPrice" />
           </div>
+          
 
           <div class="pb-4 px-3 lg:px-0 border-b border-[#efefef] dark:border-[#262626]">
+            
+            
             <div class="flex">
-              <!-- 加购按钮：直接使用主商品 databaseId -->
               <button
-                @click="product.databaseId && handleAddToCart(product.databaseId)"
-                :disabled="addToCartButtonStatus !== 'add' || !product.databaseId"
+                @click="handleAddToCart(selectedVariation.databaseId)"
+                :disabled="addToCartButtonStatus !== 'add'"
                 class="button-bezel w-full h-12 rounded-md relative tracking-wide font-semibold text-white text-sm flex justify-center items-center">
                 <Transition name="slide-up">
                   <div v-if="addToCartButtonStatus === 'add'" class="absolute">{{ $t('cart.add_to_cart') }}</div>
@@ -166,10 +141,14 @@ const { handleAddToCart, addToCartButtonStatus } = useCart();
     </div>
   </div>
 
-  <div class="mt-12 px-3">
+   <div class="mt-12 px-3">
     <h2 class="text-xl font-semibold mb-6">您可能还喜欢</h2>
+    <!-- 关键：传入当前产品的分类，显示同类产品 -->
     <ProductList :categorySlug="product?.categories?.nodes?.[0]?.slug || ''" />
   </div>
+
+
+  
 </template>
 
 <style lang="postcss">
@@ -191,6 +170,11 @@ const { handleAddToCart, addToCartButtonStatus } = useCart();
 
 .swiper-pagination {
   @apply bg-white/50 shadow-sm rounded-full py-1 backdrop-blur-sm;
+}
+
+.selected-varitaion,
+.select-varitaion:hover:not(.disabled) {
+  @apply border-alizarin-crimson-700 dark:border-alizarin-crimson-700 text-alizarin-crimson-700 bg-red-700/10;
 }
 
 .disabled {
