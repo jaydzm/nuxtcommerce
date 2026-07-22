@@ -3,7 +3,7 @@ const { site } = useAppConfig();
 const { name, description } = site;
 
 useHead({
-  htmlAttrs: { lang: 'cn' },
+  htmlAttrs: { lang: 'en' },
   titleTemplate: (chunk?: string) => (chunk ? `${chunk} - ${name}` : name),
 });
 
