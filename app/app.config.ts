@@ -5,7 +5,7 @@ export default defineAppConfig({
     description: '纯天然茶叶打造，免费领取试喝茶样.',
   },
   ui: {
-    primary: 'red',
+    primary: 'green',
     gray: 'neutral',
   },
 });
