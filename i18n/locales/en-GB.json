@@ -1,85 +1,85 @@
 {
   "general": {
-    "go_back": "Go Back",
-    "loading": "Loading..."
+    "go_back": "返回",
+    "loading": "加载..."
   },
   "theme": {
-    "dark": "Dark",
-    "light": "Light",
-    "system": "System",
-    "toggle": "Toggle theme"
+    "dark": "黑色",
+    "light": "白色",
+    "system": "系统",
+    "toggle": "切换"
   },
   "nav": {
-    "home": "Home",
-    "categories": "Categories",
-    "favorites": "Favorites",
-    "products": "Products"
+    "home": "主页",
+    "categories": "分类",
+    "favorites": "喜爱",
+    "products": "产品"
   },
   "footer": {
-    "developed_by_author": "by {author}",
-    "change_language": "Change language"
+    "developed_by_author": "由 {author}",
+    "change_language": "切换语言"
   },
   "search": {
-    "placeholder": "Search...",
-    "placeholder_in_category": "Search in {category}...",
-    "no_results_for_query": "No results for {query}",
-    "no_results_suggestion": "Try improving your results by double checking your spelling, or trying a more general keyword.",
-    "view_all_results": "View all results",
-    "new_products": "New Products",
-    "no_products_matching": " No products matching",
-    "no_products_found_matching": "No products found matching",
-    "no_products_found": "No products found",
-    "use_search_bar_above": "You can use the search bar above to try searching with different terms.",
-    "in": "in",
-    "reset_search": "Reset Search"
+    "placeholder": "搜索...",
+    "placeholder_in_category": "在 {category} 搜索...",
+    "no_results_for_query": "搜索不到 {query}",
+    "no_results_suggestion": "您可以更换内容.",
+    "view_all_results": "所有内容",
+    "new_products": "新产品",
+    "no_products_matching": "没有合适的产品",
+    "no_products_found_matching": "未找到合适的产品",
+    "no_products_found": "未找到产品",
+    "use_search_bar_above": "你可以使用上方的搜索栏来搜索其他词语.",
+    "in": "在",
+    "reset_search": "重置搜索"
   },
   "filter": {
-    "all_categories": "All Categories",
-    "newest": "Newest",
-    "price_low_high": "Price: Low to High",
-    "price_high_low": "Price: High to Low"
+    "all_categories": "全部",
+    "newest": "最新",
+    "price_low_high": "价格由低到高",
+    "price_high_low": "价格由高到低"
   },
   "checkout": {
-    "title": "Checkout",
+    "title": "标题",
     "form": {
-      "first_name": "First Name",
-      "last_name": "Last Name",
-      "email": "Email",
-      "phone": "Phone",
-      "city": "City",
-      "address": "Address"
+      "first_name": "姓名",
+      "last_name": "名",
+      "email": "邮箱",
+      "phone": "电话",
+      "city": "城市",
+      "address": "地址"
     },
     "pay": {
-      "description": "Paying a total of {total} for {items} items",
-      "btn": "Pay {total}",
-      "secure": "your payment is secured by {method}",
-      "success": "Payment successful!",
-      "processed": "Thank you for your purchase! Your order is being processed.",
-      "total": "Total",
-      "order_number": "Order Number",
-      "date": "Date",
-      "payment_method": "Payment Method"
+      "description": "共计{items} 件茶样",
+      "btn": "下单",
+      "secure": "茶样使用中通快递发货",
+      "success": "下单成功!",
+      "processed": "非常感谢您下单茶样！您的订单正在处理中.",
+      "total": "共计",
+      "order_number": "编号",
+      "date": "日期",
+      "payment_method": "下单方式"
     }
   },
   "product": {
-    "originally": "Originally",
-    "size": "Size",
-    "quantity": "Quantity",
-    "sku": "article number",
-    "vat_included": "VAT included",
-    "featured_information": "Featured Information",
-    "free_return": "Free returns within 15 days. Click for detailed",
-    "information": "Information",
-    "shop_similar": "Shop similar"
+    "originally": "原本",
+    "size": "茶样重量（克）",
+    "quantity": "数量",
+    "sku": "货号",
+    "vat_included": "元/千克",
+    "featured_information": "精选信息",
+    "free_return": "下单后会联系您.",
+    "information": "信息",
+    "shop_similar": "类似产品"
   },
   "cart": {
-    "empty": "Your cart is empty",
-    "notting_added": "You haven't added any items to your cart yet.",
-    "add_to_cart": "Add to cart",
-    "added_to_cart": "Added to cart"
+    "empty": "购物车是空的",
+    "notting_added": "您还没有将任何商品加入购物车.",
+    "add_to_cart": "免费领取茶样",
+    "added_to_cart": "已添加茶"
   },
   "favorites": {
-    "nothing_to_show_yet": "Nothing to show... yet!",
-    "wishlist_lives_here": "Wishlist you create will live here. These are a few of your favorite things..."
+    "nothing_to_show_yet": "没什么!",
+    "wishlist_lives_here": "点喜欢产品的小星星..."
   }
 }
