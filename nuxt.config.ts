@@ -60,6 +60,11 @@ export default defineNuxtConfig({
     prerender: { routes: ["/sitemap.xml", "/robots.txt"] },
   },
 
+
+   ui: {
+    primary: 'green',
+    gray: 'neutral',
+  },
   
 
   compatibilityDate: "2025-01-01",
