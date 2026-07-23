@@ -62,7 +62,7 @@ export default defineNuxtConfig({
 
 
    ui: {
-    primary: 'green',
+    primary: 'primary',
     gray: 'neutral',
   },
   
