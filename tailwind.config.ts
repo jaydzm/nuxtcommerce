@@ -10,8 +10,7 @@ export default <Partial<Config>>{
       colors: {
         'secondary-text': '#888888',
         'secondary-text-d': '#a8a8a8',
-        // 微信绿 (WeChat Green) 调色板
-        primary: {
+        'alizarin-crimson': {
           50: '#edfbf3',
           100: '#d3f6e1',
           200: '#aaecc8',
