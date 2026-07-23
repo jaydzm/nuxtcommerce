@@ -45,7 +45,8 @@ export const useCart = () => {
       }, 2000);
     } catch {
       addToCartButtonStatus.value = 'add';
-      push.error('Insufficient stock');
+      // 移除库存不足提示，改为通用错误提示
+      push.error('出了点问题');
     }
   };
 
@@ -70,12 +71,7 @@ export const useCart = () => {
       return;
     }
 
-    const maxStock = item.variation?.node?.stockQuantity;
-    if (typeof maxStock === 'number' && item.quantity >= maxStock) {
-      push.error('Insufficient stock');
-      return;
-    }
-
+    // 移除库存判断，直接增加数量
     changeQuantity(item.key, item.quantity + 1);
   };
 
