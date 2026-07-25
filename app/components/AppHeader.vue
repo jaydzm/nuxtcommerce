@@ -96,6 +96,7 @@ const totalQuantity = computed(() => cart.value.reduce((s, i) => s + (i.quantity
               <input
                 class="w-full bg-transparent py-2 outline-none placeholder:text-[#757575] placeholder:dark:text-neutral-400"
                 type="text"
+                name="search"
                 v-model="searchQuery"
                 @keyup.enter="search"
                 :placeholder="route.query.category ? $t('search.placeholder_in_category', { category: route.query.category }) : $t(' ')" />
