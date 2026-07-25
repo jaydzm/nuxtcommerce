@@ -68,7 +68,7 @@
     "sku": "货号",
     "vat_included": "元/千克",
     "featured_information": "精选信息",
-    "free_return": "下单后会联系您.",
+    "free_return": "下单后会通过短信发送快递单号",
     "information": "信息",
     "shop_similar": "类似产品"
   },
@@ -76,7 +76,7 @@
     "empty": "购物车是空的",
     "notting_added": "您还没有将任何商品加入购物车.",
     "add_to_cart": "免费领取茶样",
-    "added_to_cart": "已添加茶"
+    "added_to_cart": "已添加茶样"
   },
   "favorites": {
     "nothing_to_show_yet": "没什么!",
