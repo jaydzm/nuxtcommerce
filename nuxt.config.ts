@@ -55,6 +55,7 @@ export default defineNuxtConfig({
     "/categories": { swr: 10000 },
     "/favorites": { swr: 6000 },
     "/product": { swr: 30 },
+    "/api/*": { swr: 30 },    
   },
 
   nitro: {
