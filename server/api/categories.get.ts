@@ -7,7 +7,7 @@ export default cachedEventHandler(
     return await requestQuery(getCategoriesQuery);
   },
   {
-    maxAge: 300,
+    maxAge: 30000,
     swr: true,
   }
 );
