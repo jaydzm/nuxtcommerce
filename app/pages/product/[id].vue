@@ -89,12 +89,27 @@ const { handleAddToCart, addToCartButtonStatus } = useCart();
           :modules="modules"
           :thumbs="{ swiper: thumbsSwiper }"
           class="lg:w-[530px] lg:h-[530px] xl:w-[600px] xl:h-[600px] lg:rounded-2xl">
+          
+          <!-- ==================== 修改点 1：主图添加 image-skeleton 类 ==================== -->
           <swiper-slide @click="isOpenImageSliderModal = true">
-            <NuxtImg :alt="product.name" class="h-full w-full bg-neutral-200 dark:bg-neutral-800" :src="product.image?.sourceUrl" />
+            <NuxtImg 
+              :alt="product.name" 
+              class="h-full w-full bg-neutral-200 dark:bg-neutral-800 image-skeleton" 
+              :src="product.image?.sourceUrl" 
+            />
           </swiper-slide>
+          <!-- ==================== 修改点 1 结束 ==================== -->
+          
+          <!-- ==================== 修改点 2：画廊图添加 image-skeleton 类 ==================== -->
           <swiper-slide @click="isOpenImageSliderModal = true" v-for="(node, i) in product.galleryImages?.nodes" :key="i">
-            <NuxtImg :alt="product.name" class="h-full w-full bg-neutral-200 dark:bg-neutral-800" :src="node.sourceUrl" />
+            <NuxtImg 
+              :alt="product.name" 
+              class="h-full w-full bg-neutral-200 dark:bg-neutral-800 image-skeleton" 
+              :src="node.sourceUrl" 
+            />
           </swiper-slide>
+          <!-- ==================== 修改点 2 结束 ==================== -->
+          
         </swiper>
       </div>
       <ImageSliderWithModal :product="product" v-model="isOpenImageSliderModal" />
@@ -210,4 +225,36 @@ const { handleAddToCart, addToCartButtonStatus } = useCart();
   opacity: 0;
   transform: translateY(30px) scale(0);
 }
+
+/* ==================== 修改点 3：新增图片骨架屏动画样式 ==================== */
+.image-skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.dark .image-skeleton {
+  background: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.image-skeleton[src] {
+  background: #f0f0f0;
+  animation: none;
+}
+
+.dark .image-skeleton[src] {
+  background: #2a2a2a;
+}
+/* ==================== 修改点 3 结束 ==================== */
 </style>
