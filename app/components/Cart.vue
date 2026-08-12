@@ -22,8 +22,7 @@ const { order } = useCheckout();
                 <ProductPrice :sale-price="product.variation.node.salePrice" :regular-price="product.variation.node.regularPrice" :quantity="product.quantity" variant="cart" />
                 <div class="text-xs flex gap-2 font-medium text-neutral-600 dark:text-neutral-300">
                   <div>
-                    {{ $t('product.size') }}: {{ product.variation.attributes.map(attr => attr.value.toUpperCase()).join(', ') }} • {{ $t('product.quantity') }}:
-                    {{ product.quantity }}
+                    
                   </div>
                 </div>
               </div>
