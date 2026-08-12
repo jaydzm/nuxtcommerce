@@ -50,7 +50,7 @@
       "address": "地址"
     },
     "pay": {
-      "description": "共计{items} 件",
+      "description": "总价{total}共{items} 件",
       "btn": "下单",
       "secure": "使用中通快递发货",
       "success": "下单成功!",
