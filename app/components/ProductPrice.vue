@@ -69,7 +69,7 @@ const discountPercentage = computed(() => {
 
     <div v-else-if="variant === 'cart'">
       <div v-if="isSale" class="gap-1 flex flex-col">
-        <div class="font-bold">0元</div>
+        <div class="font-bold">${{ totalSalePrice.toFixed(2) }}元</div>
         <div class="flex-wrap text-neutral-600 dark:text-neutral-300 items-baseline text-xs gap-1 flex-row flex">
           <p>{{ $t('product.originally') }}:</p>
           <p class="line-through">0元</p>
