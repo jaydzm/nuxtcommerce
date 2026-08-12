@@ -15,7 +15,7 @@ const { order } = useCheckout();
     <div class="bg-black/5 dark:bg-white/10 rounded-2xl p-5 m-5 gap-2 flex flex-col font-light text-sm capitalize">
       <div class="flex justify-between items-center">
         <span class="dark:text-neutral-400 text-neutral-600">{{ $t('checkout.pay.total') }}:</span>
-        <span class="font-semibold text-lg">0元</span>
+        <span class="font-semibold text-lg">{{ order.total }}元</span>
       </div>
       <div class="flex justify-between items-center">
         <span class="dark:text-neutral-400 text-neutral-600">{{ $t('checkout.pay.order_number') }}:</span>
@@ -23,7 +23,7 @@ const { order } = useCheckout();
       </div>
       <div class="flex justify-between items-center">
         <span class="dark:text-neutral-400 text-neutral-600">快递单号:</span>
-        <span class="font-semibold">使用短信发送单号</span>
+        <span class="font-semibold">稍后联系</span>
       </div>
       <div class="flex justify-between items-center">
         <span class="dark:text-neutral-400 text-neutral-600">{{ $t('checkout.pay.payment_method') }}:</span>
