@@ -50,11 +50,11 @@
       "address": "地址"
     },
     "pay": {
-      "description": "共计{items} 件茶样",
+      "description": "共计{items} 件",
       "btn": "下单",
-      "secure": "茶样使用中通快递发货",
+      "secure": "使用中通快递发货",
       "success": "下单成功!",
-      "processed": "非常感谢您下单茶样！您的订单正在处理中.",
+      "processed": "非常感谢您下单！您的订单正在处理中.",
       "total": "共计",
       "order_number": "编号",
       "date": "日期",
@@ -63,7 +63,7 @@
   },
   "product": {
     "originally": "原本",
-    "size": "茶样重量（克）",
+    "size": "重量（克）",
     "quantity": "数量",
     "sku": "货号",
     "vat_included": "元/千克",
@@ -75,8 +75,8 @@
   "cart": {
     "empty": "购物车是空的",
     "notting_added": "您还没有将任何商品加入购物车.",
-    "add_to_cart": "领取茶样",
-    "added_to_cart": "已添加茶样"
+    "add_to_cart": "添加购物车",
+    "added_to_cart": "添加成功"
   },
   "favorites": {
     "nothing_to_show_yet": "没什么!",
