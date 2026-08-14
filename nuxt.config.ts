@@ -53,7 +53,11 @@ export default defineNuxtConfig({
     "/": { prerender: true },
     "/categories": { swr: 10000 },
     "/favorites": { swr: 6000 },
-    "/product/**": { swr: 6000 }, 
+    "/product/**": {
+      isr: 14400,
+      headers: {
+      "CDN-Cache-Control": "s-maxage=14400, stale-while-revalidate=3600"
+    } }, 
   },
 
   nitro: {
