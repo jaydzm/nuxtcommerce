@@ -53,7 +53,7 @@ export default defineNuxtConfig({
     "/": { prerender: true },
     "/categories": { swr: 10000 },
     "/favorites": { swr: 6000 },
-    "/product/**": { swr: 300 }, 
+    "/product/**": { isr: 14400 }, 
   },
 
   nitro: {
