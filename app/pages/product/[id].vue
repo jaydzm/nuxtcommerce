@@ -4,59 +4,49 @@ import { Swiper, SwiperSlide } from 'swiper/vue';
 import { Navigation, Pagination, Thumbs } from 'swiper/modules';
 const { isOpenImageSliderModal } = useComponents();
 const localePath = useLocalePath();
-
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
-
 const thumbsSwiper = ref(null);
 const setThumbsSwiper = swiper => {
   thumbsSwiper.value = swiper;
 };
-
 const modules = [Navigation, Pagination, Thumbs];
-
 const route = useRoute();
 const id = computed(() => route.params.id);
 const parts = id.value.split('-');
 const sku = parts.pop();
 const slug = parts.join('-');
 
-const productResult = ref({});
-const selectedVariation = ref(null);
-
-onMounted(() => {
-  $fetch('/api/product', {
+// SSR修复：使用完整公网域名，解决Nitro服务端相对路径/api请求失效问题
+const { data: productResult, error } = await useAsyncData(`product-${slug}-${sku}`, () => {
+  return $fetch('https://toppuer.top/api/product', {
     query: { slug, sku },
-  }).then(data => (productResult.value = data.product));
-});
+  })
+})
+const product = computed(() => productResult.value?.product);
 
-const product = computed(() => productResult.value);
-
+const selectedVariation = ref(null);
 const sizeOrder = ['xxs', 'xs', 's', 'm', 'l', 'xl', '2xl', '23-24', '25', '26-27', '28-29', '30', '31-32', '33', '34-25'];
-
 const sortedVariations = computed(() => {
-  if (!product.value.variations?.nodes) return [];
+  if (!product.value?.variations?.nodes) return [];
   return product.value.variations.nodes.slice().sort((a, b) => {
     const aSize = a.attributes.nodes[0].value.toLowerCase();
     const bSize = b.attributes.nodes[0].value.toLowerCase();
     return sizeOrder.indexOf(aSize) - sizeOrder.indexOf(bSize);
   });
 });
-
 watchEffect(() => {
   if (sortedVariations.value.length > 0) {
     const variationInStock = sortedVariations.value.find(variation => variation.stockStatus === 'IN_STOCK');
     selectedVariation.value = variationInStock ? variationInStock : null;
   }
 });
-
 const { handleAddToCart, addToCartButtonStatus } = useCart();
 </script>
-
 <template>
   <ProductSeo v-if="product?.name" :info="product" />
-  <ProductSkeleton v-if="!product.name" />
+  <ProductSkeleton v-if="!product.name || error" />
   <div v-else class="justify-center flex flex-col lg:flex-row lg:mx-5">
     <ButtonBack />
     <div class="mr-6 mt-5 pt-2.5 max-xl:hidden">
@@ -105,10 +95,7 @@ const { handleAddToCart, addToCartButtonStatus } = useCart();
             <ProductPrice :sale-price="product.salePrice" :regular-price="product.regularPrice" />
           </div>
           
-
           <div class="pb-4 px-3 lg:px-0 border-b border-[#efefef] dark:border-[#262626]">
-            
-            
             <div class="flex">
               <button
                 @click="handleAddToCart(selectedVariation.databaseId)"
@@ -131,7 +118,6 @@ const { handleAddToCart, addToCartButtonStatus } = useCart();
                   {{ $t('product.free_return') }}
                   <a class="underline" href="#">{{ $t('product.information') }}</a>
                 </li>
-                
                 <div v-html="product.description"></div>
               </ul>
             </div>
@@ -146,7 +132,6 @@ const { handleAddToCart, addToCartButtonStatus } = useCart();
     <ProductsSkeleton v-if="!product.name" />
   </div>
 </template>
-
 <style lang="postcss">
 .product-images-thumbs .swiper-wrapper {
   @apply flex-col gap-3;
@@ -158,25 +143,20 @@ const { handleAddToCart, addToCartButtonStatus } = useCart();
 .swiper-button-prev {
   @apply bg-white/50 hover:bg-white p-3.5 m-2 rounded-full flex items-center justify-center shadow transition backdrop-blur-sm;
 }
-
 .swiper-button-prev.swiper-button-disabled,
 .swiper-button-next.swiper-button-disabled {
   @apply hidden;
 }
-
 .swiper-pagination {
   @apply bg-white/50 shadow-sm rounded-full py-1 backdrop-blur-sm;
 }
-
 .selected-varitaion,
 .select-varitaion:hover:not(.disabled) {
   @apply border-alizarin-crimson-700 dark:border-alizarin-crimson-700 text-alizarin-crimson-700 bg-red-700/10;
 }
-
 .disabled {
   @apply opacity-40 cursor-default;
 }
-
 .button-bezel {
   box-shadow: 0 0 0 var(--button-outline, 0px) rgb(222, 92, 92, 0.3), inset 0 -1px 1px 0 rgba(0, 0, 0, 0.25), inset 0 1px 0 0 rgba(255, 255, 255, 0.3),
     0 1px 2px 0 rgba(0, 0, 0, 0.5);
@@ -189,23 +169,19 @@ const { handleAddToCart, addToCartButtonStatus } = useCart();
     --button-scale: 0.975;
   }
 }
-
 .description ul li {
   background: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxlbGxpcHNlIHJ5PSIzIiByeD0iMyIgY3k9IjMiIGN4PSIzIiBmaWxsPSIjYzljOWM5Ii8+PC9zdmc+)
     no-repeat 0 0.7rem;
   padding-left: 0.938rem;
 }
-
 .slide-up-enter-active,
 .slide-up-leave-active {
   transition: transform 0.3s ease 0s, opacity 0.3s ease 0s;
 }
-
 .slide-up-enter-from {
   opacity: 0;
   transform: translateY(-30px) scale(0);
 }
-
 .slide-up-leave-to {
   opacity: 0;
   transform: translateY(30px) scale(0);
